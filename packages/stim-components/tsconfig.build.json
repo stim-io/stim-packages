@@ -5,7 +5,8 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "declarationMap": false,
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src"
   },
   "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"]
 }

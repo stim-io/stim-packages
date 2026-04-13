@@ -30,9 +30,13 @@ export async function applyStimPlaygroundTheme(options: {
   document.documentElement.dataset.engine = engine;
 }
 
-export function resolveCurrentEngine(userAgent: string = navigator.userAgent): PlaygroundEngine {
+export function resolveCurrentEngine(
+  userAgent: string = navigator.userAgent,
+): PlaygroundEngine {
   const value = userAgent.toLowerCase();
-  return /safari/.test(value) && !/chrome|chromium|edg/.test(value) ? "webkit" : "chromium";
+  return /safari/.test(value) && !/chrome|chromium|edg/.test(value)
+    ? "webkit"
+    : "chromium";
 }
 
 export function createPlaygroundTitle(name: string, engine: PlaygroundEngine) {

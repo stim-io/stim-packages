@@ -4,11 +4,20 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "jsx": "preserve",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
+    "paths": {
+      "@stim-io/stim-components": ["packages/stim-components/src/index.ts"],
+      "@stim-io/stim-components/*": ["packages/stim-components/src/*"],
+      "@stim-io/stim-components-playground-shared": [
+        "packages/shared/src/index.ts"
+      ]
+    },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "types": ["vite/client"]

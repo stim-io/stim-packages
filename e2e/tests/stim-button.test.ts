@@ -1,7 +1,8 @@
 import { chromium } from "@playwright/test";
 import { afterAll, beforeAll, expect, test } from "vitest";
 
-const baseUrl = process.env.STIM_COMPONENTS_E2E_BASE_URL ?? "http://127.0.0.1:4173";
+const baseUrl =
+  process.env.STIM_COMPONENTS_E2E_BASE_URL ?? "http://127.0.0.1:4173";
 
 let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
 
