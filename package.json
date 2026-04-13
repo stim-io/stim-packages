@@ -1,0 +1,15 @@
+{
+  "name": "stim-components-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "build": "pnpm --filter @stim-io/stim-components build",
+    "pack:dry-run": "pnpm --dir packages/stim-components exec npm pack --dry-run",
+    "publish:dry-run": "pnpm --dir packages/stim-components exec npm publish --dry-run --registry=https://npm.pkg.github.com",
+    "typecheck": "pnpm -r typecheck",
+    "dev:playground:chromium": "pnpm --dir playgrounds/chromium dev",
+    "dev:playground:webkit": "pnpm --dir playgrounds/webkit dev",
+    "test:e2e": "pnpm --dir e2e test"
+  }
+}
