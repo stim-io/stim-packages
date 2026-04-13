@@ -1,0 +1,27 @@
+:root {
+  --stim-color-bg: #0f172a;
+  --stim-color-surface: #111827;
+  --stim-color-surface-elevated: #1f2937;
+  --stim-color-surface-accent: #4f46e5;
+  --stim-color-surface-accent-hover: #4338ca;
+  --stim-color-border-strong: #6366f1;
+  --stim-color-text-primary: #e5e7eb;
+  --stim-color-text-secondary: #9ca3af;
+  --stim-color-text-on-accent: #ffffff;
+
+  --stim-radius-sm: 0.5rem;
+  --stim-radius-md: 0.875rem;
+  --stim-radius-lg: 1.25rem;
+  --stim-radius-control: var(--stim-radius-md);
+
+  --stim-space-1: 0.25rem;
+  --stim-space-2: 0.5rem;
+  --stim-space-3: 0.75rem;
+  --stim-space-4: 1rem;
+  --stim-space-6: 1.5rem;
+  --stim-space-8: 2rem;
+
+  --stim-size-control-md: 2.75rem;
+  --stim-font-weight-medium: 600;
+  --stim-focus-ring: 0 0 0 3px rgb(99 102 241 / 0.35);
+}

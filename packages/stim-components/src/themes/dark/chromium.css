@@ -1,0 +1,8 @@
+:root {
+  --stim-font-smoothing-body: antialiased;
+}
+
+body {
+  -webkit-font-smoothing: var(--stim-font-smoothing-body);
+  text-rendering: optimizeLegibility;
+}

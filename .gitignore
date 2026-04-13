@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.pnpm-store/
+.tmp/
+playwright-report/
+test-results/
+packages/*/dist/
+playgrounds/*/dist/

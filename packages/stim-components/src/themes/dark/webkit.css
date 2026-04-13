@@ -1,0 +1,8 @@
+:root {
+  --stim-font-smoothing-body: auto;
+}
+
+body {
+  -webkit-font-smoothing: var(--stim-font-smoothing-body);
+  text-rendering: geometricPrecision;
+}
