@@ -4,6 +4,8 @@
   "type": "module",
   "packageManager": "pnpm@10.32.1",
   "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "build": "pnpm --filter @stim-io/stim-components build",
     "pack:dry-run": "pnpm --dir packages/stim-components exec npm pack --dry-run",
     "publish:dry-run": "pnpm --dir packages/stim-components exec npm publish --dry-run --registry=https://npm.pkg.github.com",
@@ -11,5 +13,8 @@
     "dev:playground:chromium": "pnpm --dir playgrounds/chromium dev",
     "dev:playground:webkit": "pnpm --dir playgrounds/webkit dev",
     "test:e2e": "pnpm --dir e2e test"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
   }
 }

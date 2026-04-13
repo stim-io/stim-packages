@@ -15,7 +15,7 @@
     "@stim-io/stim-components": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vue": "^3.5.18"
+    "typescript": "^6.0.2",
+    "vue": "^3.5.32"
   }
 }

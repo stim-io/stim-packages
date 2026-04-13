@@ -18,13 +18,18 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="playground-shell" data-playground="webkit" :data-ready="String(ready)">
+  <main
+    class="playground-shell"
+    data-playground="webkit"
+    :data-ready="String(ready)"
+  >
     <section class="playground-card">
       <p class="playground-eyebrow">webkit verification</p>
       <h1 class="playground-title">{{ title }}</h1>
       <p class="playground-copy">
-        This playground exists to expose WebKit-specific visual friction in atoms, layout primitives,
-        and theme patches before anything leaks into `stim`.
+        This playground exists to expose WebKit-specific visual friction in
+        atoms, layout primitives, and theme patches before anything leaks into
+        `stim`.
       </p>
       <StimButton label="WebKit atom" />
     </section>
@@ -43,8 +48,13 @@ onMounted(async () => {
   width: min(100%, 40rem);
   padding: var(--stim-space-8);
   border-radius: var(--stim-radius-lg);
-  border: 1px solid color-mix(in srgb, var(--stim-color-border-strong) 40%, transparent);
-  background: color-mix(in srgb, var(--stim-color-surface-elevated) 84%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--stim-color-border-strong) 40%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--stim-color-surface-elevated) 84%,
+    transparent
+  );
 }
 
 .playground-eyebrow {
