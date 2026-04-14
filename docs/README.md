@@ -9,7 +9,7 @@ Read `docs/operations/documentation.md` before making structural docs changes.
 
 Preferred sub-structure:
 
-- `architecture/overview.md`: what `stim-components` owns and what it should not absorb
+- `architecture/overview.md`: what `stim-packages` owns and what it should not absorb
 - `operations/documentation.md`: canonical docs update guide and anti-duplication rules
 - `operations/publishing.md`: canonical GitHub Packages publish/install rule
 

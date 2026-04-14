@@ -1,5 +1,5 @@
-import "@stim-io/stim-components/style.css";
-import "@stim-io/stim-components/tokens.css";
+import "@stim-io/components/styles/foundation/index.css";
+import "@stim-io/components/styles/components/stim-button/common.css";
 
 export type PlaygroundTheme = "light" | "dark";
 export type PlaygroundEngine = "chromium" | "webkit";
@@ -11,20 +11,16 @@ export async function applyStimPlaygroundTheme(options: {
   const { theme, engine } = options;
 
   if (theme === "dark") {
-    await import("@stim-io/stim-components/themes/dark/common.css");
-    await import(
-      engine === "webkit"
-        ? "@stim-io/stim-components/themes/dark/webkit.css"
-        : "@stim-io/stim-components/themes/dark/chromium.css"
-    );
+    await import("@stim-io/components/styles/themes/dark.css");
   } else {
-    await import("@stim-io/stim-components/themes/light/common.css");
-    await import(
-      engine === "webkit"
-        ? "@stim-io/stim-components/themes/light/webkit.css"
-        : "@stim-io/stim-components/themes/light/chromium.css"
-    );
+    await import("@stim-io/components/styles/themes/light.css");
   }
+
+  await import(
+    engine === "webkit"
+      ? "@stim-io/components/styles/components/stim-button/webkit.css"
+      : "@stim-io/components/styles/components/stim-button/chromium.css"
+  );
 
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.engine = engine;

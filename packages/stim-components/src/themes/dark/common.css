@@ -1,8 +1,0 @@
-body {
-  background: var(--stim-color-bg);
-  color: var(--stim-color-text-primary);
-}
-
-:root {
-  color-scheme: dark;
-}

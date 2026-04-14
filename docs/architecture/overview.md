@@ -1,6 +1,6 @@
-# stim-components Architecture Overview
+# stim-packages Architecture Overview
 
-`stim-components/` is the shared atomic component and theme workspace for the `stim` product surface.
+`stim-packages/` is the shared package workspace for the `stim` product surface.
 
 ## This repo owns
 
@@ -31,5 +31,5 @@ If yes, solve it here rather than pushing long-lived styling ownership back into
 The package boundary should remain straightforward:
 
 - package-facing exports should stay explicit
-- local playground support should not redefine the published package boundary
+- `@stim-io/shared` is the current shared support package in this workspace; packages like it may grow here when they stay below product/business composition and preserve a clean published boundary
 - later npm publishing should build on a clean package/workspace baseline rather than on local-development shortcuts

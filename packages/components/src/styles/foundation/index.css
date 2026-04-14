@@ -1,0 +1,44 @@
+:root {
+  --stim-color-scheme: light dark;
+  --stim-color-bg: Canvas;
+  --stim-color-surface: Canvas;
+  --stim-color-surface-elevated: Canvas;
+  --stim-color-surface-accent: Highlight;
+  --stim-color-surface-accent-hover: Highlight;
+  --stim-color-border-strong: ButtonBorder;
+  --stim-color-text-primary: CanvasText;
+  --stim-color-text-secondary: GrayText;
+  --stim-color-text-on-accent: HighlightText;
+
+  --stim-radius-sm: 0.5rem;
+  --stim-radius-md: 0.875rem;
+  --stim-radius-lg: 1.25rem;
+  --stim-radius-control: var(--stim-radius-md);
+
+  --stim-space-1: 0.25rem;
+  --stim-space-2: 0.5rem;
+  --stim-space-3: 0.75rem;
+  --stim-space-4: 1rem;
+  --stim-space-6: 1.5rem;
+  --stim-space-8: 2rem;
+
+  --stim-size-control-md: 2.75rem;
+  --stim-font-weight-medium: 600;
+  --stim-line-height-tight: 1;
+  --stim-border-width-control: 1px;
+  --stim-motion-duration-fast: 160ms;
+  --stim-motion-ease-standard: ease;
+  --stim-offset-press-y: 1px;
+  --stim-opacity-disabled: 0.56;
+  --stim-focus-ring: 0 0 0 3px rgb(99 102 241 / 0.35);
+  --stim-font-smoothing-body: auto;
+  --stim-text-rendering-body: auto;
+  color-scheme: var(--stim-color-scheme);
+}
+
+body {
+  background: var(--stim-color-bg);
+  color: var(--stim-color-text-primary);
+  -webkit-font-smoothing: var(--stim-font-smoothing-body);
+  text-rendering: var(--stim-text-rendering-body);
+}
