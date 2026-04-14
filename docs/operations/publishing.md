@@ -54,9 +54,10 @@ The goal is to confirm that each package payload matches the committed package b
 From `modules/stim-packages/`, the explicit publish paths are:
 
 ```bash
-pnpm -C packages/components publish --registry=https://npm.pkg.github.com
-pnpm -C packages/shared publish --registry=https://npm.pkg.github.com
+npm publish --registry=https://npm.pkg.github.com
 ```
+
+Run that command from `packages/components/` or `packages/shared/`.
 
 That command requires valid GitHub Packages auth at publish time, but it should not require extra repo-local path tricks.
 
@@ -68,13 +69,21 @@ Do not treat repo-local `link:` dependencies as the canonical install path.
 
 ## Current release stance
 
-Beta package publishing is tag-driven through `.github/workflows/publish-beta.yml`.
+Beta package publishing is manually dispatched through `.github/workflows/publish-beta.yml`.
 
-Supported beta tag shapes are:
+The operator provides:
+
+- package: `components` or `shared`
+- beta version: `<major>.<minor>.<patch>-beta.<n>`
+- optional ref to publish from, defaulting to `main`
+
+The workflow verifies and publishes from that ref first, then creates the canonical success tag after publish succeeds.
+
+Supported beta success tag shapes are:
 
 - `components-v<version>-beta.<n>`
 - `shared-v<version>-beta.<n>`
 
-Each beta tag must target one package.
+Each beta tag marks a commit that has already been successfully published for one package/version pair.
 
-The tagged beta version must match the package's `major.minor.patch` base version. The workflow then temporarily rewrites the target package's `version` field to the full beta version from the tag while running verification and publish, so the repo can keep the stable base version checked in between beta publishes.
+The requested beta version must match the package's `major.minor.patch` base version. The workflow then temporarily rewrites the target package's `version` field to the full beta version while running verification and publish, so the repo can keep the stable base version checked in between beta publishes.
