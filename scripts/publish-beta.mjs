@@ -40,15 +40,11 @@ switch (command) {
 
   case "publish": {
     await withTemporaryPackageVersion(publishTarget, async () => {
-      await runCommand("pnpm", [
-        "-C",
+      await runCommand(
+        "npm",
+        ["publish", "--tag", "beta", "--registry=https://npm.pkg.github.com"],
         publishTarget.packageDir,
-        "publish",
-        "--no-git-checks",
-        "--tag",
-        "beta",
-        "--registry=https://npm.pkg.github.com",
-      ]);
+      );
     });
     break;
   }
@@ -285,10 +281,10 @@ async function withTemporaryPackageVersion(publishTarget, callback) {
   }
 }
 
-async function runCommand(commandName, args) {
+async function runCommand(commandName, args, cwd = rootDir) {
   await new Promise((resolve, reject) => {
     const child = spawn(commandName, args, {
-      cwd: rootDir,
+      cwd,
       stdio: "inherit",
       env: process.env,
     });
