@@ -101,6 +101,7 @@ async function assertTagOrder(packageKey, version, tagValue) {
   const targetVersion = parseSemver(version);
   const existingTags = await listExistingTags(packageKey);
   const existingVersions = existingTags
+    .filter((existingTag) => existingTag !== tagValue)
     .map((existingTag) => parsePackageTag(packageKey, existingTag))
     .filter(Boolean)
     .map(({ version: existingVersion, tag }) => ({
