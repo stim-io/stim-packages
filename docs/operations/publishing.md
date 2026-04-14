@@ -75,4 +75,6 @@ Supported beta tag shapes are:
 - `components-v<version>-beta.<n>`
 - `shared-v<version>-beta.<n>`
 
-Each beta tag must target one package, and the tag version must match that package's `package.json` version exactly.
+Each beta tag must target one package.
+
+The tagged beta version must match the package's `major.minor.patch` base version. The workflow then temporarily rewrites the target package's `version` field to the full beta version from the tag while running verification and publish, so the repo can keep the stable base version checked in between beta publishes.
