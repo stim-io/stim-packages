@@ -21,30 +21,34 @@ switch (command) {
       maybeOutputFlag === "--github-output" ? maybeOutputPath : undefined;
 
     if (githubOutputPath) {
-        await appendGitHubOutputs(githubOutputPath, publishTarget);
-        break;
-      }
-
-      process.stdout.write(`${JSON.stringify(publishTarget, null, 2)}\n`);
+      await appendGitHubOutputs(githubOutputPath, publishTarget);
       break;
     }
 
-    case "verify": {
+    process.stdout.write(`${JSON.stringify(publishTarget, null, 2)}\n`);
+    break;
+  }
+
+  case "verify": {
+    await withTemporaryPackageVersion(publishTarget, async () => {
       for (const args of publishTarget.verifyCommands) {
         await runCommand(args[0], args.slice(1));
       }
-      break;
-    }
+    });
+    break;
+  }
 
-    case "publish": {
+  case "publish": {
+    await withTemporaryPackageVersion(publishTarget, async () => {
       await runCommand("pnpm", [
         "-C",
         publishTarget.packageDir,
         "publish",
         "--tag",
         "beta",
-      "--registry=https://npm.pkg.github.com",
-    ]);
+        "--registry=https://npm.pkg.github.com",
+      ]);
+    });
     break;
   }
 
@@ -65,15 +69,19 @@ async function resolvePublishTarget(tagValue) {
   const config = publishConfig()[packageKey];
   const packageJsonPath = path.join(rootDir, config.packageDir, "package.json");
   const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
+  const packageVersion = parseSemver(packageJson.version);
+  const tagVersion = parseSemver(version);
 
-  if (packageJson.version !== version) {
+  if (!sameCoreVersion(packageVersion, tagVersion)) {
     throw new Error(
-      `tag version ${version} does not match ${config.packageDir}/package.json version ${packageJson.version}`,
+      `tag version ${version} does not match base version of ${config.packageDir}/package.json version ${packageJson.version}`,
     );
   }
 
   if (packageJson.private) {
-    throw new Error(`${config.packageDir} is still private and cannot be published`);
+    throw new Error(
+      `${config.packageDir} is still private and cannot be published`,
+    );
   }
 
   await assertTagOrder(packageKey, version, tagValue);
@@ -82,7 +90,9 @@ async function resolvePublishTarget(tagValue) {
     packageKey,
     version,
     packageDir: config.packageDir,
+    packageJsonPath,
     npmName: packageJson.name,
+    packageVersion: packageJson.version,
     verifyCommands: config.verifyCommands,
   };
 }
@@ -102,7 +112,10 @@ async function assertTagOrder(packageKey, version, tagValue) {
   let highestBetaForSameCore = null;
 
   for (const existing of existingVersions) {
-    if (!highestVersion || compareSemver(existing.parsed, highestVersion.parsed) > 0) {
+    if (
+      !highestVersion ||
+      compareSemver(existing.parsed, highestVersion.parsed) > 0
+    ) {
       highestVersion = existing;
     }
 
@@ -113,14 +126,18 @@ async function assertTagOrder(packageKey, version, tagValue) {
     ) {
       if (
         existing.parsed.beta !== null &&
-        (!highestBetaForSameCore || existing.parsed.beta > highestBetaForSameCore.parsed.beta)
+        (!highestBetaForSameCore ||
+          existing.parsed.beta > highestBetaForSameCore.parsed.beta)
       ) {
         highestBetaForSameCore = existing;
       }
     }
   }
 
-  if (highestVersion && compareSemver(targetVersion, highestVersion.parsed) < 0) {
+  if (
+    highestVersion &&
+    compareSemver(targetVersion, highestVersion.parsed) < 0
+  ) {
     throw new Error(
       `tag ${tagValue} regresses package order; highest existing ${packageKey} tag is ${highestVersion.tag}`,
     );
@@ -138,7 +155,11 @@ async function assertTagOrder(packageKey, version, tagValue) {
 }
 
 async function listExistingTags(packageKey) {
-  const { stdout } = await runCommandCapture("git", ["tag", "--list", `${packageKey}-v*`]);
+  const { stdout } = await runCommandCapture("git", [
+    "tag",
+    "--list",
+    `${packageKey}-v*`,
+  ]);
   return stdout
     .split("\n")
     .map((line) => line.trim())
@@ -193,6 +214,14 @@ function compareSemver(left, right) {
   return left.beta - right.beta;
 }
 
+function sameCoreVersion(left, right) {
+  return (
+    left.major === right.major &&
+    left.minor === right.minor &&
+    left.patch === right.patch
+  );
+}
+
 function publishConfig() {
   return {
     components: {
@@ -232,6 +261,28 @@ async function appendGitHubOutputs(filePath, publishTarget) {
   await writeFile(filePath, `${body}\n`, { flag: "a" });
 }
 
+async function withTemporaryPackageVersion(publishTarget, callback) {
+  if (publishTarget.packageVersion === publishTarget.version) {
+    await callback();
+    return;
+  }
+
+  const originalSource = await readFile(publishTarget.packageJsonPath, "utf8");
+  const packageJson = JSON.parse(originalSource);
+  packageJson.version = publishTarget.version;
+
+  await writeFile(
+    publishTarget.packageJsonPath,
+    `${JSON.stringify(packageJson, null, 2)}\n`,
+  );
+
+  try {
+    await callback();
+  } finally {
+    await writeFile(publishTarget.packageJsonPath, originalSource);
+  }
+}
+
 async function runCommand(commandName, args) {
   await new Promise((resolve, reject) => {
     const child = spawn(commandName, args, {
@@ -246,7 +297,11 @@ async function runCommand(commandName, args) {
         return;
       }
 
-      reject(new Error(`${commandName} ${args.join(" ")} failed with exit code ${code}`));
+      reject(
+        new Error(
+          `${commandName} ${args.join(" ")} failed with exit code ${code}`,
+        ),
+      );
     });
 
     child.on("error", reject);
