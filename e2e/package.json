@@ -1,5 +1,5 @@
 {
-  "name": "@stim-io/stim-components-e2e",
+  "name": "@stim-io/components-e2e",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,11 +8,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@playwright/test": "^1.59.1"
+    "@playwright/test": "1.59.1"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.4"
+    "@types/node": "25.6.0",
+    "typescript": "6.0.2",
+    "vitest": "4.1.4"
   }
 }

@@ -1,10 +1,10 @@
 # Publishing
 
-This file defines the canonical package publishing and consumer-install rule for `@stim-io/stim-components`.
+This file defines the canonical package publishing and consumer-install rule for the published packages in `stim-packages`.
 
 ## Canonical registry
 
-`@stim-io/stim-components` publishes to GitHub Packages.
+`@stim-io/components` and `@stim-io/shared` publish to GitHub Packages.
 
 Use the `@stim-io` scope with:
 
@@ -23,39 +23,56 @@ Do not commit auth tokens. Keep auth material in user-level npm config, CI secre
 
 Publish from:
 
-- `packages/stim-components/`
+- `packages/components/`
+- `packages/shared/`
 
 Do not publish from the workspace root.
 
 ## Required local verification before publish
 
-Before publishing, run:
+Before publishing `@stim-io/components`, run:
 
-- `pnpm typecheck`
-- `pnpm build`
-- `pnpm pack:dry-run`
-- `pnpm publish:dry-run`
+- `pnpm -C packages/components build`
+- `pnpm -C packages/components typecheck`
+- `pnpm -C packages/shared typecheck`
+- `pnpm -C playgrounds/chromium typecheck`
+- `pnpm -C playgrounds/webkit typecheck`
+- `pnpm -C e2e typecheck`
+- `pnpm -C packages/components pack:dry-run`
+- `pnpm -C packages/components publish:dry-run`
 
-The goal is to confirm that the package artifact matches the committed package boundary.
+Before publishing `@stim-io/shared`, run:
+
+- `pnpm -C packages/shared typecheck`
+- `pnpm -C packages/shared pack:dry-run`
+- `pnpm -C packages/shared publish:dry-run`
+
+The goal is to confirm that each package payload matches the committed package boundary before publish.
 
 ## First publish command
 
-From `modules/stim-components/`, the explicit first-publish path is:
+From `modules/stim-packages/`, the explicit publish paths are:
 
 ```bash
-pnpm --dir packages/stim-components exec npm publish --registry=https://npm.pkg.github.com
+pnpm -C packages/components publish --registry=https://npm.pkg.github.com
+pnpm -C packages/shared publish --registry=https://npm.pkg.github.com
 ```
 
 That command requires valid GitHub Packages auth at publish time, but it should not require extra repo-local path tricks.
 
 ## Consumer install rule
 
-Consumers that install `@stim-io/stim-components` should configure the `@stim-io` scope to GitHub Packages explicitly.
+Consumers that install `@stim-io/components` or `@stim-io/shared` should configure the `@stim-io` scope to GitHub Packages explicitly.
 
 Do not treat repo-local `link:` dependencies as the canonical install path.
 
 ## Current release stance
 
-The first publish may be manual as long as it is explicit, reproducible, and based on the committed package state.
+Beta package publishing is tag-driven through `.github/workflows/publish-beta.yml`.
 
-Release automation may be added later if it improves clarity without hiding the real package boundary.
+Supported beta tag shapes are:
+
+- `components-v<version>-beta.<n>`
+- `shared-v<version>-beta.<n>`
+
+Each beta tag must target one package, and the tag version must match that package's `package.json` version exactly.

@@ -1,6 +1,6 @@
 # Documentation Update Guide
 
-This file defines how `stim-components/docs` should evolve.
+This file defines how `stim-packages/docs` should evolve.
 
 ## Goal
 

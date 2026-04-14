@@ -1,5 +1,5 @@
 {
-  "name": "@stim-io/playground-chromium",
+  "name": "@stim-io/chromium-playground",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,14 +8,14 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@stim-io/stim-components": "workspace:*",
-    "@stim-io/stim-components-playground-shared": "workspace:*",
-    "vue": "^3.5.32"
+    "@stim-io/components": "workspace:*",
+    "@stim-io/shared": "workspace:*",
+    "vue": "3.5.32"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.6",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.8",
-    "vue-tsc": "^3.2.6"
+    "@vitejs/plugin-vue": "6.0.6",
+    "typescript": "6.0.2",
+    "vite": "8.0.8",
+    "vue-tsc": "3.2.6"
   }
 }

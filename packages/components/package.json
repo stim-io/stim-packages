@@ -1,5 +1,5 @@
 {
-  "name": "@stim-io/shared",
+  "name": "@stim-io/components",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -7,34 +7,43 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/stim-io/stim-packages.git",
-    "directory": "packages/shared"
+    "directory": "packages/components"
   },
   "homepage": "https://github.com/stim-io/stim-packages",
   "bugs": {
     "url": "https://github.com/stim-io/stim-packages/issues"
   },
   "files": [
-    "src",
-    "README.md"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts"
-    }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles/*": "./dist/styles/*"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "node ./scripts/build.mjs",
+    "typecheck": "vue-tsc -p tsconfig.json --noEmit",
     "pack:dry-run": "npm pack --dry-run",
     "publish:dry-run": "npm publish --dry-run --registry=https://npm.pkg.github.com",
     "publish:dry-run:beta": "npm publish --dry-run --registry=https://npm.pkg.github.com --tag beta"
   },
-  "dependencies": {
-    "@stim-io/components": "workspace:*"
+  "peerDependencies": {
+    "vue": "3.5.32"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "6.0.6",
     "typescript": "6.0.2",
-    "vue": "3.5.32"
+    "vite": "8.0.8",
+    "vue": "3.5.32",
+    "vue-tsc": "3.2.6"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

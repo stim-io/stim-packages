@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { StimButton } from "@stim-io/stim-components";
+import { StimButton } from "@stim-io/components";
 import {
   applyStimPlaygroundTheme,
   createPlaygroundTitle,
   type PlaygroundEngine,
-} from "@stim-io/stim-components-playground-shared";
+} from "@stim-io/shared";
 
 const engine: PlaygroundEngine = "chromium";
-const title = createPlaygroundTitle("stim-components", engine);
+const title = createPlaygroundTitle("stim-packages", engine);
 const ready = ref(false);
 
 onMounted(async () => {

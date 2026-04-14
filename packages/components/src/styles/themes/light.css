@@ -1,0 +1,12 @@
+:root {
+  --stim-color-scheme: light;
+  --stim-color-bg: #f8fafc;
+  --stim-color-surface: #ffffff;
+  --stim-color-surface-elevated: #e2e8f0;
+  --stim-color-surface-accent: #4f46e5;
+  --stim-color-surface-accent-hover: #4338ca;
+  --stim-color-border-strong: #6366f1;
+  --stim-color-text-primary: #0f172a;
+  --stim-color-text-secondary: #475569;
+  --stim-color-text-on-accent: #ffffff;
+}
