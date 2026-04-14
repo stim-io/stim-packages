@@ -44,6 +44,7 @@ switch (command) {
         "-C",
         publishTarget.packageDir,
         "publish",
+        "--no-git-checks",
         "--tag",
         "beta",
         "--registry=https://npm.pkg.github.com",
