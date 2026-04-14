@@ -1,12 +1,27 @@
 name: publish-beta
 
 on:
-  push:
-    tags:
-      - "components-v*-beta.*"
-      - "shared-v*-beta.*"
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to publish
+        required: true
+        type: choice
+        options:
+          - components
+          - shared
+      version:
+        description: Beta version like 0.1.0-beta.1
+        required: true
+        type: string
+      ref:
+        description: Git ref to publish from
+        required: false
+        default: main
+        type: string
 
 permissions:
+  contents: write
   packages: write
 
 jobs:
@@ -17,9 +32,18 @@ jobs:
       package_dir: ${{ steps.metadata.outputs.package_dir }}
       package_name: ${{ steps.metadata.outputs.package_name }}
       version: ${{ steps.metadata.outputs.version }}
+      tag: ${{ steps.metadata.outputs.tag }}
+      ref_sha: ${{ steps.ref.outputs.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Resolve publish ref
+        id: ref
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -35,10 +59,10 @@ jobs:
 
       - name: Resolve publish metadata
         id: metadata
-        run: node scripts/publish-beta.mjs metadata "${{ github.ref_name }}" --github-output "$GITHUB_OUTPUT"
+        run: node scripts/publish-beta.mjs metadata "${{ inputs.package }}" "${{ inputs.version }}" --github-output "$GITHUB_OUTPUT"
 
       - name: Run beta publish verification
-        run: node scripts/publish-beta.mjs verify "${{ github.ref_name }}"
+        run: node scripts/publish-beta.mjs verify "${{ inputs.package }}" "${{ inputs.version }}"
 
   publish:
     needs: validate
@@ -46,6 +70,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.ref_sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -61,6 +87,20 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Publish beta package to GitHub Packages
-        run: node scripts/publish-beta.mjs publish "${{ github.ref_name }}"
+        run: node scripts/publish-beta.mjs publish "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  tag:
+    needs:
+      - validate
+      - publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.ref_sha }}
+
+      - name: Create success tag
+        run: node scripts/publish-beta.mjs create-tag "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}" --ref "${{ needs.validate.outputs.ref_sha }}"

@@ -3,22 +3,22 @@ import path from "node:path";
 import process from "node:process";
 import { spawn } from "node:child_process";
 
-const betaTagPattern = /^(components|shared)-v(\d+\.\d+\.\d+-beta\.\d+)$/;
+const packageKeyPattern = /^(components|shared)$/;
 const semverPattern = /^(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?$/;
 
 const rootDir = process.cwd();
-const [command, tag, maybeOutputFlag, maybeOutputPath] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const [command, packageKeyArg, versionArg, ...optionArgs] = args;
 
-if (!command || !tag) {
+if (!command || !packageKeyArg || !versionArg) {
   usageAndExit();
 }
 
-const publishTarget = await resolvePublishTarget(tag);
+const publishTarget = await resolvePublishTarget(packageKeyArg, versionArg);
 
 switch (command) {
   case "metadata": {
-    const githubOutputPath =
-      maybeOutputFlag === "--github-output" ? maybeOutputPath : undefined;
+    const githubOutputPath = readOption("--github-output", optionArgs);
 
     if (githubOutputPath) {
       await appendGitHubOutputs(githubOutputPath, publishTarget);
@@ -49,29 +49,40 @@ switch (command) {
     break;
   }
 
+  case "create-tag": {
+    const ref = readRequiredOption("--ref", optionArgs);
+    await createTagForRef(publishTarget, ref);
+    break;
+  }
+
   default:
     usageAndExit();
 }
 
-async function resolvePublishTarget(tagValue) {
-  const match = betaTagPattern.exec(tagValue);
-
-  if (!match) {
+async function resolvePublishTarget(packageKey, version) {
+  if (!packageKeyPattern.test(packageKey)) {
     throw new Error(
-      `unsupported beta tag '${tagValue}'. expected components-v<version>-beta.<n> or shared-v<version>-beta.<n>`,
+      `unsupported beta package '${packageKey}'. expected components or shared`,
     );
   }
 
-  const [, packageKey, version] = match;
+  const parsedVersion = parseSemver(version);
+
+  if (parsedVersion.beta === null) {
+    throw new Error(
+      `unsupported beta version '${version}'. expected <major>.<minor>.<patch>-beta.<n>`,
+    );
+  }
+
   const config = publishConfig()[packageKey];
   const packageJsonPath = path.join(rootDir, config.packageDir, "package.json");
   const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
   const packageVersion = parseSemver(packageJson.version);
-  const tagVersion = parseSemver(version);
+  const tagValue = buildTag(packageKey, version);
 
-  if (!sameCoreVersion(packageVersion, tagVersion)) {
+  if (!sameCoreVersion(packageVersion, parsedVersion)) {
     throw new Error(
-      `tag version ${version} does not match base version of ${config.packageDir}/package.json version ${packageJson.version}`,
+      `beta version ${version} does not match base version of ${config.packageDir}/package.json version ${packageJson.version}`,
     );
   }
 
@@ -86,6 +97,7 @@ async function resolvePublishTarget(tagValue) {
   return {
     packageKey,
     version,
+    tag: tagValue,
     packageDir: config.packageDir,
     packageJsonPath,
     npmName: packageJson.name,
@@ -94,11 +106,14 @@ async function resolvePublishTarget(tagValue) {
   };
 }
 
+function buildTag(packageKey, version) {
+  return `${packageKey}-v${version}`;
+}
+
 async function assertTagOrder(packageKey, version, tagValue) {
   const targetVersion = parseSemver(version);
   const existingTags = await listExistingTags(packageKey);
   const existingVersions = existingTags
-    .filter((existingTag) => existingTag !== tagValue)
     .map((existingTag) => parsePackageTag(packageKey, existingTag))
     .filter(Boolean)
     .map(({ version: existingVersion, tag }) => ({
@@ -255,8 +270,25 @@ async function appendGitHubOutputs(filePath, publishTarget) {
     `package_dir=${publishTarget.packageDir}`,
     `package_name=${publishTarget.npmName}`,
     `version=${publishTarget.version}`,
+    `tag=${publishTarget.tag}`,
   ].join("\n");
   await writeFile(filePath, `${body}\n`, { flag: "a" });
+}
+
+async function createTagForRef(publishTarget, ref) {
+  const normalizedRef = ref.trim();
+
+  if (!normalizedRef) {
+    throw new Error("missing --ref for create-tag");
+  }
+
+  const existingTags = await listExistingTags(publishTarget.packageKey);
+  if (existingTags.includes(publishTarget.tag)) {
+    throw new Error(`tag ${publishTarget.tag} already exists`);
+  }
+
+  await runCommand("git", ["tag", publishTarget.tag, normalizedRef]);
+  await runCommand("git", ["push", "origin", publishTarget.tag]);
 }
 
 async function withTemporaryPackageVersion(publishTarget, callback) {
@@ -341,9 +373,27 @@ async function runCommandCapture(commandName, args) {
   });
 }
 
+function readOption(name, optionArgs) {
+  const index = optionArgs.indexOf(name);
+  if (index === -1) {
+    return undefined;
+  }
+
+  return optionArgs[index + 1];
+}
+
+function readRequiredOption(name, optionArgs) {
+  const value = readOption(name, optionArgs);
+  if (!value) {
+    throw new Error(`missing required option ${name}`);
+  }
+
+  return value;
+}
+
 function usageAndExit() {
   console.error(
-    "usage: node scripts/publish-beta.mjs <metadata|verify|publish> <components-v...|shared-v...> [--github-output <path>]",
+    "usage: node scripts/publish-beta.mjs <metadata|verify|publish|create-tag> <components|shared> <x.y.z-beta.n> [--github-output <path>] [--ref <sha>]",
   );
   process.exit(1);
 }
