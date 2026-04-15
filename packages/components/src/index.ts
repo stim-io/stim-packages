@@ -1,1 +1,9 @@
 export { default as StimButton } from "./atoms/button/StimButton.vue";
+export { default as StimInput } from "./atoms/input/StimInput.vue";
+export { default as StimText } from "./atoms/text/StimText.vue";
+export { default as StimInfoList } from "./primitives/info-list/StimInfoList.vue";
+export { default as StimSurface } from "./primitives/surface/StimSurface.vue";
+export { default as StimStack } from "./primitives/stack/StimStack.vue";
+export { default as StimViewportStage } from "./primitives/stage/StimViewportStage.vue";
+export { default as StimMessageCardFrame } from "./composition/message-card/StimMessageCardFrame.vue";
+export { default as StimRichContent } from "./composition/rich-content/StimRichContent.vue";

@@ -10,6 +10,7 @@ Read `docs/operations/documentation.md` before making structural docs changes.
 Preferred sub-structure:
 
 - `architecture/overview.md`: what `stim-packages` owns and what it should not absorb
+- `architecture/message-card-primitives.md`: first shared card/layout/theme primitive plan for Slice 7 message-card work
 - `operations/documentation.md`: canonical docs update guide and anti-duplication rules
 - `operations/publishing.md`: canonical GitHub Packages publish/install rule
 

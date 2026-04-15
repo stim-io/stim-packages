@@ -22,6 +22,13 @@ pnpm add @stim-io/components
   - `@stim-io/components/styles/themes/dark.css`
 - component CSS:
   - `@stim-io/components/styles/components/stim-button/common.css`
+  - `@stim-io/components/styles/components/stim-input/common.css`
+  - `@stim-io/components/styles/components/stim-info-list/common.css`
+  - `@stim-io/components/styles/components/stim-surface/common.css`
+  - `@stim-io/components/styles/components/stim-stack/common.css`
+  - `@stim-io/components/styles/components/stim-viewport-stage/common.css`
+  - `@stim-io/components/styles/components/stim-message-card-frame/common.css`
+  - `@stim-io/components/styles/components/stim-rich-content/common.css`
   - `@stim-io/components/styles/components/stim-button/chromium.css`
   - `@stim-io/components/styles/components/stim-button/webkit.css`
 

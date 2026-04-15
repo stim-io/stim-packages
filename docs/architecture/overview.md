@@ -26,6 +26,8 @@ When visual friction appears in `stim/`, prefer asking whether the missing capab
 
 If yes, solve it here rather than pushing long-lived styling ownership back into `stim/`.
 
+Message-card work follows the same rule strictly: if `stim` needs reusable card surfaces, reusable layout pressure handling, or theme-aware message-card styling, that capability belongs here rather than in product-local renderer CSS.
+
 ## Packaging rule
 
 The package boundary should remain straightforward:

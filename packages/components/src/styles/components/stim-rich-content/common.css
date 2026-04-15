@@ -1,0 +1,31 @@
+.stim-rich-content {
+  inline-size: 100%;
+}
+
+.stim-rich-content__text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  color: inherit;
+}
+
+.stim-rich-content__html {
+  color: inherit;
+}
+
+.stim-rich-content__fragment {
+  color: inherit;
+}
+
+.stim-rich-content__fragment p {
+  margin: 0;
+}
+
+.stim-rich-content__html > :first-child {
+  margin-top: 0;
+}
+
+.stim-rich-content__html > :last-child {
+  margin-bottom: 0;
+}

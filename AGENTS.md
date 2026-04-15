@@ -49,6 +49,7 @@ Detailed component/package design belongs in `docs/`, not here.
 - `docs/operations/documentation.md`: docs update guide and anti-duplication rules
 - `docs/operations/publishing.md`: canonical GitHub Packages publish/install rule for the package workspace
 - `docs/architecture/overview.md`: package-boundary and ownership overview
+- `docs/architecture/message-card-primitives.md`: canonical first primitive plan for Slice 7 message-card work
 - `.github/workflows/verify.yml`: required PR-protection verify gate
 - `.github/workflows/publish-beta.yml`: tag-driven beta package publishing workflow
 - `../../AGENTS.md`: repo-root workspace boundary across all attached repos
