@@ -1,0 +1,28 @@
+.stim-text {
+  margin: 0;
+}
+
+.stim-text--tone-primary {
+  color: var(--stim-color-text-primary);
+}
+
+.stim-text--tone-secondary {
+  color: var(--stim-color-text-secondary);
+}
+
+.stim-text--size-body {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.stim-text--size-eyebrow {
+  font-size: 0.8rem;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.stim-text--size-display {
+  font-size: clamp(2.25rem, 6vw, 3.75rem);
+  line-height: 1.05;
+}

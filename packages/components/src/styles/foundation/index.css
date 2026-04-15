@@ -3,9 +3,11 @@
   --stim-color-bg: Canvas;
   --stim-color-surface: Canvas;
   --stim-color-surface-elevated: Canvas;
+  --stim-color-surface-muted: Canvas;
   --stim-color-surface-accent: Highlight;
   --stim-color-surface-accent-hover: Highlight;
   --stim-color-border-strong: ButtonBorder;
+  --stim-color-border-subtle: color-mix(in srgb, CanvasText 18%, transparent);
   --stim-color-text-primary: CanvasText;
   --stim-color-text-secondary: GrayText;
   --stim-color-text-on-accent: HighlightText;
@@ -23,6 +25,7 @@
   --stim-space-8: 2rem;
 
   --stim-size-control-md: 2.75rem;
+  --stim-size-card-expand-min: 8rem;
   --stim-font-weight-medium: 600;
   --stim-line-height-tight: 1;
   --stim-border-width-control: 1px;

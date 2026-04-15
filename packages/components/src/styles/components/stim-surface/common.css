@@ -1,0 +1,54 @@
+.stim-surface {
+  border: 1px solid var(--stim-color-border-subtle);
+  background: var(--stim-surface-bg, var(--stim-color-surface));
+  color: var(--stim-surface-fg, var(--stim-color-text-primary));
+}
+
+.stim-surface--tone-default {
+  --stim-surface-bg: var(--stim-color-surface);
+  --stim-surface-fg: var(--stim-color-text-primary);
+}
+
+.stim-surface--tone-elevated {
+  --stim-surface-bg: var(--stim-color-surface-elevated);
+  --stim-surface-fg: var(--stim-color-text-primary);
+}
+
+.stim-surface--tone-accent {
+  --stim-surface-bg: var(--stim-color-surface-accent);
+  --stim-surface-fg: var(--stim-color-text-on-accent);
+  border-color: var(--stim-color-surface-accent);
+}
+
+.stim-surface--tone-muted {
+  --stim-surface-bg: var(--stim-color-surface-muted);
+  --stim-surface-fg: var(--stim-color-text-secondary);
+}
+
+.stim-surface--padding-none {
+  padding: 0;
+}
+
+.stim-surface--padding-sm {
+  padding: var(--stim-space-2);
+}
+
+.stim-surface--padding-md {
+  padding: var(--stim-space-4);
+}
+
+.stim-surface--padding-lg {
+  padding: var(--stim-space-6);
+}
+
+.stim-surface--radius-sm {
+  border-radius: var(--stim-radius-sm);
+}
+
+.stim-surface--radius-md {
+  border-radius: var(--stim-radius-md);
+}
+
+.stim-surface--radius-lg {
+  border-radius: var(--stim-radius-lg);
+}

@@ -1,0 +1,25 @@
+.stim-viewport-stage {
+  min-block-size: 100vh;
+  display: grid;
+}
+
+.stim-viewport-stage--align-center {
+  place-items: center;
+}
+
+.stim-viewport-stage--align-start {
+  align-items: start;
+  justify-items: center;
+}
+
+.stim-viewport-stage--padding-md {
+  padding: var(--stim-space-4);
+}
+
+.stim-viewport-stage--padding-lg {
+  padding: var(--stim-space-6);
+}
+
+.stim-viewport-stage--padding-xl {
+  padding: var(--stim-space-8);
+}
