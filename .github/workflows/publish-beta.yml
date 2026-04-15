@@ -86,6 +86,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Rebuild publish payload
+        run: node scripts/publish-beta.mjs verify "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}"
+
       - name: Publish beta package to GitHub Packages
         run: node scripts/publish-beta.mjs publish "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}"
         env:
