@@ -1,7 +1,14 @@
+export { default as StimAvatar } from "./atoms/avatar/StimAvatar.vue";
+export { default as StimBadge } from "./atoms/badge/StimBadge.vue";
 export { default as StimButton } from "./atoms/button/StimButton.vue";
 export { default as StimInput } from "./atoms/input/StimInput.vue";
 export { default as StimText } from "./atoms/text/StimText.vue";
+export { default as StimAppRoot } from "./primitives/app-root/StimAppRoot.vue";
 export { default as StimInfoList } from "./primitives/info-list/StimInfoList.vue";
+export { default as StimInline } from "./primitives/inline/StimInline.vue";
+export { default as StimInteractiveRow } from "./primitives/interactive-row/StimInteractiveRow.vue";
+export { default as StimPane } from "./primitives/pane/StimPane.vue";
+export { default as StimSplit } from "./primitives/split/StimSplit.vue";
 export { default as StimSurface } from "./primitives/surface/StimSurface.vue";
 export { default as StimStack } from "./primitives/stack/StimStack.vue";
 export { default as StimViewportStage } from "./primitives/stage/StimViewportStage.vue";

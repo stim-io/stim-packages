@@ -5,7 +5,7 @@ const props = withDefaults(
   defineProps<{
     as?: "p" | "span" | "div" | "h1" | "h2" | "h3";
     tone?: "primary" | "secondary";
-    size?: "body" | "eyebrow" | "display";
+    size?: "body" | "eyebrow" | "display" | "label" | "caption";
   }>(),
   {
     as: "p",

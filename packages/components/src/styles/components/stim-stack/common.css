@@ -30,3 +30,7 @@
 .stim-stack--align-center {
   align-items: center;
 }
+
+.stim-stack--align-end {
+  align-items: flex-end;
+}
