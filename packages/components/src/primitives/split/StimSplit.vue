@@ -3,19 +3,19 @@ import { computed } from "vue";
 
 const props = withDefaults(
   defineProps<{
-    gap?: "xs" | "sm" | "md" | "lg";
-    align?: "start" | "stretch" | "center" | "end";
+    direction?: "horizontal" | "vertical";
+    gap?: "none" | "xs" | "sm" | "md" | "lg";
   }>(),
   {
+    direction: "horizontal",
     gap: "md",
-    align: "stretch",
   },
 );
 
 const className = computed(() => [
-  "stim-stack",
-  `stim-stack--gap-${props.gap}`,
-  `stim-stack--align-${props.align}`,
+  "stim-split",
+  `stim-split--direction-${props.direction}`,
+  `stim-split--gap-${props.gap}`,
 ]);
 </script>
 

@@ -1,0 +1,38 @@
+.stim-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-weight: var(--stim-font-weight-medium);
+  border: 1px solid transparent;
+}
+
+.stim-badge--size-sm {
+  min-inline-size: 1.25rem;
+  min-block-size: 1.25rem;
+  padding-inline: var(--stim-space-2);
+  font-size: 0.75rem;
+}
+
+.stim-badge--size-md {
+  min-inline-size: 1.5rem;
+  min-block-size: 1.5rem;
+  padding-inline: var(--stim-space-2);
+  font-size: 0.8125rem;
+}
+
+.stim-badge--tone-default {
+  background: var(--stim-color-surface-elevated);
+  color: var(--stim-color-text-primary);
+}
+
+.stim-badge--tone-muted {
+  background: var(--stim-color-surface-muted);
+  color: var(--stim-color-text-secondary);
+}
+
+.stim-badge--tone-accent {
+  background: var(--stim-color-surface-accent);
+  color: var(--stim-color-text-on-accent);
+}

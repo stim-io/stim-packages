@@ -26,3 +26,14 @@
   font-size: clamp(2.25rem, 6vw, 3.75rem);
   line-height: 1.05;
 }
+
+.stim-text--size-label {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  font-weight: var(--stim-font-weight-medium);
+}
+
+.stim-text--size-caption {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}

@@ -1,0 +1,11 @@
+.stim-app-root {
+  display: flex;
+  inline-size: 100%;
+  block-size: 100vh;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+  padding: 0;
+  background: var(--stim-color-bg);
+  color: var(--stim-color-text-primary);
+}
