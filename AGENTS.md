@@ -14,6 +14,7 @@ Detailed component/package design belongs in `docs/`, not here.
 - `stim-packages/` owns atomic Vue components, shared layout primitives, tokens, theme definitions, and adjacent support packages for the `stim` product surface.
 - Keep product-specific screen composition and business styling decisions out of this repo; those belong in `stim/`.
 - Keep styling ownership explicit: tokens and themes live here, and browser-engine patches should stay visible rather than hidden in mixed styling logic.
+- Add or widen shared primitives only when real repeated product pressure shows that a concern is durable across screens; do not absorb one-off product composition leftovers just to make `stim/` look cosmetically thinner.
 - Grow playground and test surfaces from real browser-engine or packaging friction, not from speculative framework process.
 - Keep the published package boundary clean enough that npm publishing can stay straightforward when enabled.
 
@@ -45,11 +46,9 @@ Detailed component/package design belongs in `docs/`, not here.
 
 - `AGENTS.md`: stable constraints and file index
 - `README.md`: workspace/package overview and local verification notes
-- `docs/README.md`: docs structure map and canonical doc entrypoint
 - `docs/operations/documentation.md`: docs update guide and anti-duplication rules
 - `docs/operations/publishing.md`: canonical GitHub Packages publish/install rule for the package workspace
-- `docs/architecture/overview.md`: package-boundary and ownership overview
-- `docs/architecture/message-card-primitives.md`: canonical first primitive plan for Slice 7 message-card work
+- `docs/architecture/components.md`: canonical shared component and primitive ownership method
 - `.github/workflows/verify.yml`: required PR-protection verify gate
 - `.github/workflows/publish-beta.yml`: tag-driven beta package publishing workflow
 - `../../AGENTS.md`: repo-root workspace boundary across all attached repos

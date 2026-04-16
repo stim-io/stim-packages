@@ -2,6 +2,14 @@
 
 This file defines the canonical package publishing and consumer-install rule for the published packages in `stim-packages`.
 
+## Quick reading guide
+
+Use this file when the question is:
+
+- where published `@stim-io` packages should go
+- what must be verified before publish
+- what publish/install paths are canonical versus local-only convenience
+
 ## Canonical registry
 
 `@stim-io/components` and `@stim-io/shared` publish to GitHub Packages.
@@ -66,6 +74,14 @@ That command requires valid GitHub Packages auth at publish time, but it should 
 Consumers that install `@stim-io/components` or `@stim-io/shared` should configure the `@stim-io` scope to GitHub Packages explicitly.
 
 Do not treat repo-local `link:` dependencies as the canonical install path.
+
+Positive example:
+
+- consumer repo configures the `@stim-io` scope to GitHub Packages and installs a published beta version
+
+Negative example:
+
+- consumer behavior depends on repo-local `file:` or `link:` wiring as if that were the real published boundary
 
 ## Current release stance
 
