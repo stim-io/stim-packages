@@ -1,0 +1,29 @@
+@use "../../authoring/state";
+
+.stim-input {
+  inline-size: 100%;
+  border: var(--stim-border-width-control) solid var(--stim-color-border-subtle);
+  border-radius: var(--stim-radius-control);
+  background: var(--stim-color-surface);
+  color: var(--stim-color-text-primary);
+  font: inherit;
+
+  @include state.control-focus-ring;
+
+  &--size-sm {
+    min-height: var(--stim-size-control-sm);
+    padding-inline: var(--stim-space-3);
+    padding-block: var(--stim-space-1);
+    font-size: 0.875rem;
+  }
+
+  &--size-md {
+    min-height: var(--stim-size-control-md);
+    padding-inline: var(--stim-space-4);
+    padding-block: var(--stim-space-2);
+  }
+
+  &::placeholder {
+    color: var(--stim-color-text-secondary);
+  }
+}

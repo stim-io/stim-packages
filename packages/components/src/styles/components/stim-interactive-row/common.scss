@@ -1,0 +1,78 @@
+@use "../../authoring/state";
+
+.stim-interactive-row {
+  display: flex;
+  inline-size: 100%;
+  align-items: center;
+  gap: var(--stim-space-3);
+  min-inline-size: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--stim-motion-duration-fast)
+      var(--stim-motion-ease-standard),
+    border-color var(--stim-motion-duration-fast)
+      var(--stim-motion-ease-standard),
+    box-shadow var(--stim-motion-duration-fast) var(--stim-motion-ease-standard);
+
+  @include state.control-focus-ring;
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--stim-color-surface-elevated) 64%,
+      transparent
+    );
+  }
+
+  &--justify-start {
+    justify-content: flex-start;
+  }
+
+  &--justify-center {
+    justify-content: center;
+  }
+
+  &--justify-between {
+    justify-content: space-between;
+  }
+
+  &--active {
+    background: var(--stim-color-surface-muted);
+    border-color: var(--stim-color-border-subtle);
+  }
+
+  &--tone-accent#{&}--active {
+    background: color-mix(
+      in srgb,
+      var(--stim-color-surface-accent) 10%,
+      transparent
+    );
+    border-color: var(--stim-color-border-subtle);
+  }
+
+  &--padding-sm {
+    padding: var(--stim-space-2);
+  }
+
+  &--padding-md {
+    padding: var(--stim-space-3);
+  }
+
+  &--radius-sm {
+    border-radius: var(--stim-radius-sm);
+  }
+
+  &--radius-md {
+    border-radius: var(--stim-radius-md);
+  }
+
+  &--radius-lg {
+    border-radius: var(--stim-radius-lg);
+  }
+}

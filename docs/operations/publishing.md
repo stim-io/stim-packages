@@ -46,14 +46,14 @@ Before publishing `@stim-io/components`, run:
 - `pnpm -C playgrounds/chromium typecheck`
 - `pnpm -C playgrounds/webkit typecheck`
 - `pnpm -C e2e typecheck`
-- `pnpm -C packages/components pack:dry-run`
-- `pnpm -C packages/components publish:dry-run`
+- `pnpm -C packages/components run pack`
+- `pnpm -C packages/components run release -- --target=all`
 
 Before publishing `@stim-io/shared`, run:
 
 - `pnpm -C packages/shared typecheck`
-- `pnpm -C packages/shared pack:dry-run`
-- `pnpm -C packages/shared publish:dry-run`
+- `pnpm -C packages/shared run pack`
+- `pnpm -C packages/shared run release -- --target=all`
 
 The goal is to confirm that each package payload matches the committed package boundary before publish.
 
@@ -62,10 +62,11 @@ The goal is to confirm that each package payload matches the committed package b
 From `modules/stim-packages/`, the explicit publish paths are:
 
 ```bash
-npm publish --registry=https://npm.pkg.github.com
+pnpm -C packages/components run release -- --target=release --no-dry-run
+pnpm -C packages/shared run release -- --target=release --no-dry-run
 ```
 
-Run that command from `packages/components/` or `packages/shared/`.
+Each package owns its core lifecycle scripts under its local `./scripts/` directory. Package-local `scripts/pack.mjs` uses `cac`, accepts `--target=all|pack`, and defaults to dry-run `all`. Package-local `scripts/release.mjs` uses `cac`, accepts `--target=all|release`, and defaults to dry-run `all`; pass `--no-dry-run` only for the actual release. Shared, process-level mechanics such as command execution and package metadata reads come from `@stim-io/shared/node`; release policy stays in the package-local script.
 
 That command requires valid GitHub Packages auth at publish time, but it should not require extra repo-local path tricks.
 
@@ -85,7 +86,7 @@ Negative example:
 
 ## Current release stance
 
-Beta package publishing is manually dispatched through `.github/workflows/publish-beta.yml`.
+Beta package release is manually dispatched through `.github/workflows/release-beta.yml`.
 
 The operator provides:
 
@@ -93,13 +94,13 @@ The operator provides:
 - beta version: `<major>.<minor>.<patch>-beta.<n>`
 - optional ref to publish from, defaulting to `main`
 
-The workflow verifies and publishes from that ref first, then creates the canonical success tag after publish succeeds.
+The workflow verifies and releases from that ref first, then creates the canonical success tag after release succeeds.
 
 Supported beta success tag shapes are:
 
 - `components-v<version>-beta.<n>`
 - `shared-v<version>-beta.<n>`
 
-Each beta tag marks a commit that has already been successfully published for one package/version pair.
+Each beta tag marks a commit that has already been successfully released for one package/version pair.
 
-The requested beta version must match the package's `major.minor.patch` base version. The workflow then temporarily rewrites the target package's `version` field to the full beta version while running verification and publish, so the repo can keep the stable base version checked in between beta publishes.
+The requested beta version must match the package's `major.minor.patch` base version. The workflow then temporarily rewrites the target package's `version` field to the full beta version while running verification and release, so the repo can keep the stable base version checked in between beta releases.

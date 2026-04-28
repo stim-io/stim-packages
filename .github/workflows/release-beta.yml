@@ -1,10 +1,10 @@
-name: publish-beta
+name: release-beta
 
 on:
   workflow_dispatch:
     inputs:
       package:
-        description: Package to publish
+        description: Package to release
         required: true
         type: choice
         options:
@@ -15,7 +15,7 @@ on:
         required: true
         type: string
       ref:
-        description: Git ref to publish from
+        description: Git ref to release from
         required: false
         default: main
         type: string
@@ -40,7 +40,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Resolve publish ref
+      - name: Resolve release ref
         id: ref
         run: |
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -57,14 +57,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Resolve publish metadata
+      - name: Resolve release metadata
         id: metadata
-        run: node scripts/publish-beta.mjs metadata "${{ inputs.package }}" "${{ inputs.version }}" --github-output "$GITHUB_OUTPUT"
+        run: node scripts/release-beta.mjs metadata "${{ inputs.package }}" "${{ inputs.version }}" --github-output "$GITHUB_OUTPUT"
 
-      - name: Run beta publish verification
-        run: node scripts/publish-beta.mjs verify "${{ inputs.package }}" "${{ inputs.version }}"
+      - name: Run beta release verification
+        run: node scripts/release-beta.mjs verify "${{ inputs.package }}" "${{ inputs.version }}"
 
-  publish:
+  release:
     needs: validate
     runs-on: ubuntu-latest
     steps:
@@ -86,18 +86,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Rebuild publish payload
-        run: node scripts/publish-beta.mjs verify "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}"
+      - name: Rebuild release payload
+        run: node scripts/release-beta.mjs verify "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}"
 
-      - name: Publish beta package to GitHub Packages
-        run: node scripts/publish-beta.mjs publish "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}"
+      - name: Release beta package to GitHub Packages
+        run: node scripts/release-beta.mjs release "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   tag:
     needs:
       - validate
-      - publish
+      - release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -106,4 +106,4 @@ jobs:
           ref: ${{ needs.validate.outputs.ref_sha }}
 
       - name: Create success tag
-        run: node scripts/publish-beta.mjs create-tag "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}" --ref "${{ needs.validate.outputs.ref_sha }}"
+        run: node scripts/release-beta.mjs create-tag "${{ needs.validate.outputs.package_key }}" "${{ needs.validate.outputs.version }}" --ref "${{ needs.validate.outputs.ref_sha }}"

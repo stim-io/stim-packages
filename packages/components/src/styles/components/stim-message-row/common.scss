@@ -1,0 +1,19 @@
+.stim-message-row {
+  inline-size: 100%;
+
+  &__inner {
+    inline-size: 100%;
+  }
+
+  &__content {
+    max-inline-size: min(42rem, 100%);
+  }
+
+  &--user &__content {
+    align-items: flex-end;
+  }
+
+  &--system &__content {
+    max-inline-size: min(36rem, 100%);
+  }
+}

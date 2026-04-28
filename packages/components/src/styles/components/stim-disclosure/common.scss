@@ -1,0 +1,31 @@
+@use "../../authoring/state";
+
+.stim-disclosure {
+  border-block-start: 1px solid var(--stim-color-border-subtle);
+  background: var(--stim-color-surface);
+
+  &__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--stim-space-4);
+    padding: var(--stim-space-4) var(--stim-space-6);
+    cursor: pointer;
+    user-select: none;
+
+    @include state.control-focus-ring;
+  }
+
+  &__title {
+    font-weight: var(--stim-font-weight-medium);
+    color: var(--stim-color-text-primary);
+  }
+
+  &__caption {
+    color: var(--stim-color-text-secondary);
+  }
+
+  &__body {
+    padding: 0 var(--stim-space-6) var(--stim-space-6);
+  }
+}

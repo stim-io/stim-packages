@@ -1,0 +1,31 @@
+.stim-rich-content {
+  inline-size: 100%;
+
+  &__text {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font: inherit;
+    color: inherit;
+  }
+
+  &__html {
+    color: inherit;
+
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__fragment {
+    color: inherit;
+
+    p {
+      margin: 0;
+    }
+  }
+}
