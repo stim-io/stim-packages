@@ -5,7 +5,7 @@ import {
   applyStimPlaygroundTheme,
   createPlaygroundTitle,
   type PlaygroundEngine,
-} from "@stim-io/shared";
+} from "@stim-io/playground";
 
 const engine: PlaygroundEngine = "webkit";
 const title = createPlaygroundTitle("stim-packages", engine);

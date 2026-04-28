@@ -1,0 +1,34 @@
+.stim-split {
+  display: flex;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+
+  &--direction-horizontal {
+    flex-direction: row;
+  }
+
+  &--direction-vertical {
+    flex-direction: column;
+  }
+
+  &--gap-none {
+    gap: 0;
+  }
+
+  &--gap-xs {
+    gap: var(--stim-space-1);
+  }
+
+  &--gap-sm {
+    gap: var(--stim-space-2);
+  }
+
+  &--gap-md {
+    gap: var(--stim-space-4);
+  }
+
+  &--gap-lg {
+    gap: var(--stim-space-6);
+  }
+}

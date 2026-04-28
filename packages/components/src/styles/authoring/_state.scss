@@ -1,0 +1,23 @@
+@mixin control-focus-ring {
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--stim-focus-ring);
+  }
+}
+
+@mixin press-feedback {
+  &:active {
+    transform: translateY(var(--stim-offset-press-y));
+  }
+}
+
+@mixin disabled-control {
+  &:disabled {
+    cursor: not-allowed;
+    opacity: var(--stim-opacity-disabled);
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

@@ -30,16 +30,23 @@
   },
   "scripts": {
     "build": "node ./scripts/build.mjs",
+    "lint": "node ./scripts/lint.mjs",
     "typecheck": "vue-tsc -p tsconfig.json --noEmit",
-    "pack:dry-run": "npm pack --dry-run",
-    "publish:dry-run": "npm publish --dry-run --registry=https://npm.pkg.github.com",
-    "publish:dry-run:beta": "npm publish --dry-run --registry=https://npm.pkg.github.com --tag beta"
+    "pack": "node ./scripts/pack.mjs",
+    "release": "node ./scripts/release.mjs"
   },
   "peerDependencies": {
     "vue": "3.5.32"
   },
   "devDependencies": {
+    "@stim-io/shared": "workspace:*",
     "@vitejs/plugin-vue": "6.0.6",
+    "cac": "7.0.0",
+    "postcss-scss": "4.0.9",
+    "sass": "1.99.0",
+    "stylelint": "17.9.1",
+    "stylelint-config-standard-scss": "17.0.0",
+    "stylelint-scss": "7.0.0",
     "typescript": "6.0.2",
     "vite": "8.0.8",
     "vue": "3.5.32",

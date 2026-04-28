@@ -1,0 +1,108 @@
+@use "../../authoring/state";
+
+.stim-button {
+  --stim-button-min-block-size-sm: var(--stim-size-control-sm);
+  --stim-button-min-block-size-md: var(--stim-size-control-md);
+  --stim-button-padding-inline-sm: var(--stim-space-3);
+  --stim-button-padding-inline-md: var(--stim-space-4);
+  --stim-button-padding-block-sm: var(--stim-space-1);
+  --stim-button-padding-block-md: var(--stim-space-2);
+  --stim-button-font-size-sm: 0.875rem;
+  --stim-button-font-size-md: inherit;
+  --stim-button-min-block-size: var(--stim-button-min-block-size-md);
+  --stim-button-padding-inline: var(--stim-button-padding-inline-md);
+  --stim-button-padding-block: var(--stim-button-padding-block-md);
+  --stim-button-font-size: var(--stim-button-font-size-md);
+  --stim-button-border-color: transparent;
+  --stim-button-bg: transparent;
+  --stim-button-fg: var(--stim-color-text-primary);
+  --stim-button-border-color-hover: var(--stim-button-border-color);
+  --stim-button-bg-hover: var(--stim-button-bg);
+  --stim-button-fg-hover: var(--stim-button-fg);
+  --stim-button-bg-ghost-hover: color-mix(
+    in srgb,
+    var(--stim-color-surface-elevated) 56%,
+    transparent
+  );
+  --stim-button-bg-pressed: color-mix(
+    in srgb,
+    var(--stim-color-surface-accent) 18%,
+    transparent
+  );
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--stim-button-min-block-size);
+  padding-inline: var(--stim-button-padding-inline);
+  padding-block: var(--stim-button-padding-block);
+  border: var(--stim-border-width-control) solid var(--stim-button-border-color);
+  border-radius: var(--stim-radius-control);
+  background: var(--stim-button-bg);
+  color: var(--stim-button-fg);
+  font: inherit;
+  font-size: var(--stim-button-font-size);
+  font-weight: var(--stim-font-weight-medium);
+  line-height: var(--stim-line-height-tight);
+  cursor: pointer;
+  transition:
+    background-color var(--stim-motion-duration-fast)
+      var(--stim-motion-ease-standard),
+    border-color var(--stim-motion-duration-fast)
+      var(--stim-motion-ease-standard),
+    box-shadow var(--stim-motion-duration-fast) var(--stim-motion-ease-standard),
+    transform var(--stim-motion-duration-fast) var(--stim-motion-ease-standard);
+
+  @include state.control-focus-ring;
+  @include state.press-feedback;
+  @include state.disabled-control;
+
+  &:hover {
+    border-color: var(--stim-button-border-color-hover);
+    background: var(--stim-button-bg-hover);
+    color: var(--stim-button-fg-hover);
+  }
+
+  &--size-sm {
+    --stim-button-min-block-size: var(--stim-button-min-block-size-sm);
+    --stim-button-padding-inline: var(--stim-button-padding-inline-sm);
+    --stim-button-padding-block: var(--stim-button-padding-block-sm);
+    --stim-button-font-size: var(--stim-button-font-size-sm);
+  }
+
+  &--size-md {
+    --stim-button-min-block-size: var(--stim-button-min-block-size-md);
+    --stim-button-padding-inline: var(--stim-button-padding-inline-md);
+    --stim-button-padding-block: var(--stim-button-padding-block-md);
+    --stim-button-font-size: var(--stim-button-font-size-md);
+  }
+
+  &--primary {
+    --stim-button-border-color: var(--stim-color-border-strong);
+    --stim-button-bg: var(--stim-color-surface-accent);
+    --stim-button-fg: var(--stim-color-text-on-accent);
+    --stim-button-bg-hover: var(--stim-color-surface-accent-hover);
+  }
+
+  &--secondary {
+    --stim-button-border-color: var(--stim-color-border-subtle);
+    --stim-button-bg: var(--stim-color-surface-elevated);
+    --stim-button-fg: var(--stim-color-text-primary);
+    --stim-button-bg-hover: var(--stim-color-surface-muted);
+    --stim-button-border-color-hover: var(--stim-color-border-strong);
+  }
+
+  &--ghost {
+    --stim-button-border-color: transparent;
+    --stim-button-bg: transparent;
+    --stim-button-fg: var(--stim-color-text-secondary);
+    --stim-button-bg-hover: var(--stim-button-bg-ghost-hover);
+    --stim-button-fg-hover: var(--stim-color-text-primary);
+  }
+
+  &--pressed {
+    --stim-button-border-color: var(--stim-color-border-strong);
+    --stim-button-bg: var(--stim-button-bg-pressed);
+    --stim-button-fg: var(--stim-color-text-primary);
+  }
+}

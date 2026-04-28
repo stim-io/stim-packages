@@ -1,0 +1,36 @@
+.stim-message-card-frame {
+  inline-size: 100%;
+
+  &--layout-bubble {
+    max-inline-size: min(100%, 42rem);
+  }
+
+  &--layout-card {
+    max-inline-size: min(100%, 48rem);
+  }
+
+  &--role-user {
+    margin-inline-start: auto;
+  }
+
+  &--role-assistant,
+  &--role-system {
+    margin-inline-end: auto;
+  }
+
+  &--pressure-compact {
+    align-self: flex-start;
+  }
+
+  &--pressure-expand {
+    min-block-size: var(--stim-size-card-expand-min);
+  }
+
+  &--pressure-scroll {
+    overflow: auto;
+  }
+
+  &--pressure-none {
+    overflow: visible;
+  }
+}

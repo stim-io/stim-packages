@@ -1,0 +1,51 @@
+.stim-stack {
+  display: flex;
+  flex-direction: column;
+
+  &--gap-none {
+    gap: 0;
+  }
+
+  &--gap-xs {
+    gap: var(--stim-space-1);
+  }
+
+  &--gap-sm {
+    gap: var(--stim-space-2);
+  }
+
+  &--gap-md {
+    gap: var(--stim-space-4);
+  }
+
+  &--gap-lg {
+    gap: var(--stim-space-6);
+  }
+
+  &--align-start {
+    align-items: flex-start;
+  }
+
+  &--align-stretch {
+    align-items: stretch;
+  }
+
+  &--align-center {
+    align-items: center;
+  }
+
+  &--align-end {
+    align-items: flex-end;
+  }
+
+  &--grow {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+
+  &--full-block {
+    block-size: 100%;
+    min-block-size: 0;
+  }
+}

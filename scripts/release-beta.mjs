@@ -1,7 +1,11 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { spawn } from "node:child_process";
+import {
+  readPackageJson,
+  runCommand,
+  runCommandCapture,
+} from "@stim-io/shared/node";
 
 const packageKeyPattern = /^(components|shared)$/;
 const semverPattern = /^(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?$/;
@@ -14,36 +18,45 @@ if (!command || !packageKeyArg || !versionArg) {
   usageAndExit();
 }
 
-const publishTarget = await resolvePublishTarget(packageKeyArg, versionArg);
+const releaseTarget = await resolveReleaseTarget(packageKeyArg, versionArg);
 
 switch (command) {
   case "metadata": {
     const githubOutputPath = readOption("--github-output", optionArgs);
 
     if (githubOutputPath) {
-      await appendGitHubOutputs(githubOutputPath, publishTarget);
+      await appendGitHubOutputs(githubOutputPath, releaseTarget);
       break;
     }
 
-    process.stdout.write(`${JSON.stringify(publishTarget, null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify(releaseTarget, null, 2)}\n`);
     break;
   }
 
   case "verify": {
-    await withTemporaryPackageVersion(publishTarget, async () => {
-      for (const args of publishTarget.verifyCommands) {
-        await runCommand(args[0], args.slice(1));
+    await withTemporaryPackageVersion(releaseTarget, async () => {
+      for (const args of releaseTarget.verifyCommands) {
+        await runCommand(args[0], args.slice(1), { cwd: rootDir });
       }
     });
     break;
   }
 
-  case "publish": {
-    await withTemporaryPackageVersion(publishTarget, async () => {
+  case "release": {
+    await withTemporaryPackageVersion(releaseTarget, async () => {
       await runCommand(
-        "npm",
-        ["publish", "--tag", "beta", "--registry=https://npm.pkg.github.com"],
-        publishTarget.packageDir,
+        "pnpm",
+        [
+          "-C",
+          releaseTarget.packageDir,
+          "run",
+          "release",
+          "--",
+          "--target=release",
+          "--tag=beta",
+          "--no-dry-run",
+        ],
+        { cwd: rootDir },
       );
     });
     break;
@@ -51,7 +64,7 @@ switch (command) {
 
   case "create-tag": {
     const ref = readRequiredOption("--ref", optionArgs);
-    await createTagForRef(publishTarget, ref);
+    await createTagForRef(releaseTarget, ref);
     break;
   }
 
@@ -59,7 +72,7 @@ switch (command) {
     usageAndExit();
 }
 
-async function resolvePublishTarget(packageKey, version) {
+async function resolveReleaseTarget(packageKey, version) {
   if (!packageKeyPattern.test(packageKey)) {
     throw new Error(
       `unsupported beta package '${packageKey}'. expected components or shared`,
@@ -74,9 +87,11 @@ async function resolvePublishTarget(packageKey, version) {
     );
   }
 
-  const config = publishConfig()[packageKey];
+  const config = releaseConfig()[packageKey];
   const packageJsonPath = path.join(rootDir, config.packageDir, "package.json");
-  const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
+  const packageJson = await readPackageJson(
+    path.join(rootDir, config.packageDir),
+  );
   const packageVersion = parseSemver(packageJson.version);
   const tagValue = buildTag(packageKey, version);
 
@@ -88,7 +103,7 @@ async function resolvePublishTarget(packageKey, version) {
 
   if (packageJson.private) {
     throw new Error(
-      `${config.packageDir} is still private and cannot be published`,
+      `${config.packageDir} is still private and cannot be released`,
     );
   }
 
@@ -168,11 +183,11 @@ async function assertTagOrder(packageKey, version, tagValue) {
 }
 
 async function listExistingTags(packageKey) {
-  const { stdout } = await runCommandCapture("git", [
-    "tag",
-    "--list",
-    `${packageKey}-v*`,
-  ]);
+  const { stdout } = await runCommandCapture(
+    "git",
+    ["tag", "--list", `${packageKey}-v*`],
+    { cwd: rootDir },
+  );
   return stdout
     .split("\n")
     .map((line) => line.trim())
@@ -194,7 +209,7 @@ function parsePackageTag(packageKey, tag) {
 function parseSemver(version) {
   const match = semverPattern.exec(version);
   if (!match) {
-    throw new Error(`unsupported semver '${version}' in publish-beta flow`);
+    throw new Error(`unsupported semver '${version}' in release-beta flow`);
   }
 
   return {
@@ -235,7 +250,7 @@ function sameCoreVersion(left, right) {
   );
 }
 
-function publishConfig() {
+function releaseConfig() {
   return {
     components: {
       packageDir: "packages/components",
@@ -247,8 +262,17 @@ function publishConfig() {
         ["pnpm", "-C", "playgrounds/chromium", "typecheck"],
         ["pnpm", "-C", "playgrounds/webkit", "typecheck"],
         ["pnpm", "-C", "e2e", "typecheck"],
-        ["pnpm", "-C", "packages/components", "pack:dry-run"],
-        ["pnpm", "-C", "packages/components", "publish:dry-run:beta"],
+        ["pnpm", "-C", "packages/components", "run", "pack"],
+        [
+          "pnpm",
+          "-C",
+          "packages/components",
+          "run",
+          "release",
+          "--",
+          "--target=all",
+          "--tag=beta",
+        ],
       ],
     },
     shared: {
@@ -257,120 +281,73 @@ function publishConfig() {
         ["pnpm", "verify:ci"],
         ["pnpm", "-C", "packages/components", "build"],
         ["pnpm", "-C", "packages/shared", "typecheck"],
-        ["pnpm", "-C", "packages/shared", "pack:dry-run"],
-        ["pnpm", "-C", "packages/shared", "publish:dry-run:beta"],
+        ["pnpm", "-C", "packages/shared", "run", "pack"],
+        [
+          "pnpm",
+          "-C",
+          "packages/shared",
+          "run",
+          "release",
+          "--",
+          "--target=all",
+          "--tag=beta",
+        ],
       ],
     },
   };
 }
 
-async function appendGitHubOutputs(filePath, publishTarget) {
+async function appendGitHubOutputs(filePath, releaseTarget) {
   const body = [
-    `package_key=${publishTarget.packageKey}`,
-    `package_dir=${publishTarget.packageDir}`,
-    `package_name=${publishTarget.npmName}`,
-    `version=${publishTarget.version}`,
-    `tag=${publishTarget.tag}`,
+    `package_key=${releaseTarget.packageKey}`,
+    `package_dir=${releaseTarget.packageDir}`,
+    `package_name=${releaseTarget.npmName}`,
+    `version=${releaseTarget.version}`,
+    `tag=${releaseTarget.tag}`,
   ].join("\n");
   await writeFile(filePath, `${body}\n`, { flag: "a" });
 }
 
-async function createTagForRef(publishTarget, ref) {
+async function createTagForRef(releaseTarget, ref) {
   const normalizedRef = ref.trim();
 
   if (!normalizedRef) {
     throw new Error("missing --ref for create-tag");
   }
 
-  const existingTags = await listExistingTags(publishTarget.packageKey);
-  if (existingTags.includes(publishTarget.tag)) {
-    throw new Error(`tag ${publishTarget.tag} already exists`);
+  const existingTags = await listExistingTags(releaseTarget.packageKey);
+  if (existingTags.includes(releaseTarget.tag)) {
+    throw new Error(`tag ${releaseTarget.tag} already exists`);
   }
 
-  await runCommand("git", ["tag", publishTarget.tag, normalizedRef]);
-  await runCommand("git", ["push", "origin", publishTarget.tag]);
+  await runCommand("git", ["tag", releaseTarget.tag, normalizedRef], {
+    cwd: rootDir,
+  });
+  await runCommand("git", ["push", "origin", releaseTarget.tag], {
+    cwd: rootDir,
+  });
 }
 
-async function withTemporaryPackageVersion(publishTarget, callback) {
-  if (publishTarget.packageVersion === publishTarget.version) {
+async function withTemporaryPackageVersion(releaseTarget, callback) {
+  if (releaseTarget.packageVersion === releaseTarget.version) {
     await callback();
     return;
   }
 
-  const originalSource = await readFile(publishTarget.packageJsonPath, "utf8");
+  const originalSource = await readFile(releaseTarget.packageJsonPath, "utf8");
   const packageJson = JSON.parse(originalSource);
-  packageJson.version = publishTarget.version;
+  packageJson.version = releaseTarget.version;
 
   await writeFile(
-    publishTarget.packageJsonPath,
+    releaseTarget.packageJsonPath,
     `${JSON.stringify(packageJson, null, 2)}\n`,
   );
 
   try {
     await callback();
   } finally {
-    await writeFile(publishTarget.packageJsonPath, originalSource);
+    await writeFile(releaseTarget.packageJsonPath, originalSource);
   }
-}
-
-async function runCommand(commandName, args, cwd = rootDir) {
-  await new Promise((resolve, reject) => {
-    const child = spawn(commandName, args, {
-      cwd,
-      stdio: "inherit",
-      env: process.env,
-    });
-
-    child.on("exit", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-
-      reject(
-        new Error(
-          `${commandName} ${args.join(" ")} failed with exit code ${code}`,
-        ),
-      );
-    });
-
-    child.on("error", reject);
-  });
-}
-
-async function runCommandCapture(commandName, args) {
-  return await new Promise((resolve, reject) => {
-    let stdout = "";
-    let stderr = "";
-
-    const child = spawn(commandName, args, {
-      cwd: rootDir,
-      env: process.env,
-    });
-
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
-
-    child.on("exit", (code) => {
-      if (code === 0) {
-        resolve({ stdout, stderr });
-        return;
-      }
-
-      reject(
-        new Error(
-          `${commandName} ${args.join(" ")} failed with exit code ${code}${stderr ? `: ${stderr.trim()}` : ""}`,
-        ),
-      );
-    });
-
-    child.on("error", reject);
-  });
 }
 
 function readOption(name, optionArgs) {
@@ -393,7 +370,7 @@ function readRequiredOption(name, optionArgs) {
 
 function usageAndExit() {
   console.error(
-    "usage: node scripts/publish-beta.mjs <metadata|verify|publish|create-tag> <components|shared> <x.y.z-beta.n> [--github-output <path>] [--ref <sha>]",
+    "usage: node scripts/release-beta.mjs <metadata|verify|release|create-tag> <components|shared> <x.y.z-beta.n> [--github-output <path>] [--ref <sha>]",
   );
   process.exit(1);
 }

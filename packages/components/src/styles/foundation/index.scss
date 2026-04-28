@@ -7,6 +7,7 @@
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+
   --stim-color-scheme: light dark;
   --stim-color-bg: Canvas;
   --stim-color-surface: Canvas;
@@ -19,19 +20,16 @@
   --stim-color-text-primary: CanvasText;
   --stim-color-text-secondary: GrayText;
   --stim-color-text-on-accent: HighlightText;
-
   --stim-radius-sm: 0.5rem;
   --stim-radius-md: 0.875rem;
   --stim-radius-lg: 1.25rem;
   --stim-radius-control: var(--stim-radius-md);
-
   --stim-space-1: 0.25rem;
   --stim-space-2: 0.5rem;
   --stim-space-3: 0.75rem;
   --stim-space-4: 1rem;
   --stim-space-6: 1.5rem;
   --stim-space-8: 2rem;
-
   --stim-size-control-sm: 2rem;
   --stim-size-control-md: 2.75rem;
   --stim-size-card-expand-min: 8rem;
@@ -42,9 +40,10 @@
   --stim-motion-ease-standard: ease;
   --stim-offset-press-y: 1px;
   --stim-opacity-disabled: 0.56;
-  --stim-focus-ring: 0 0 0 3px rgb(99 102 241 / 0.35);
+  --stim-focus-ring: 0 0 0 3px rgb(99 102 241 / 35%);
   --stim-font-smoothing-body: auto;
   --stim-text-rendering-body: auto;
+
   color-scheme: var(--stim-color-scheme);
 }
 
@@ -52,9 +51,7 @@
   box-sizing: border-box;
 }
 
-html,
-body,
-#app {
+:where(html, body, [id="app"]) {
   block-size: 100%;
   min-block-size: 100%;
   overflow: hidden;

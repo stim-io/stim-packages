@@ -80,8 +80,39 @@ Package boundaries should stay explicit and publishable:
 
 - keep component styling under a dedicated styles tree
 - use CSS variables as the default customization surface
+- use Sass only as the component-package authoring layer for style-block reuse and BEM-like selector structure
+- do not replace design tokens or theme boundaries with Sass variables; prefer `--stim-*` CSS variables, and discuss exceptions explicitly
+- write component selectors with stable `stim-*` BEM-like class names and use Sass nesting with `&` to keep block/element/modifier boundaries visible
 - keep theme composition explicit for callers
 - avoid automatic style injection or aggregate helpers unless real repeated host-composition pressure proves they are necessary
+
+## CSS variable layering rule
+
+Use CSS variables as the styling boundary, not Sass values.
+
+- foundation/theme tokens own cross-component values such as color, spacing, radius, control size, motion, and typography primitives
+- component files own component-semantic variables such as `--stim-button-bg`, `--stim-avatar-size`, or `--stim-pane-padding`
+- component defaults may map to foundation tokens, but modifiers should switch component variables rather than writing final visual properties directly
+- Sass mixins may reuse state blocks or selector structure, but Sass variables must not become token or theme authority
+- structural behavior such as direction, wrapping, scrolling, alignment, and role placement may stay as direct declarations when it is not a visual value boundary
+
+Prefer this shape:
+
+```scss
+.stim-avatar {
+  --stim-avatar-size: var(--stim-avatar-size-md);
+  --stim-avatar-font-size: var(--stim-avatar-font-size-md);
+
+  inline-size: var(--stim-avatar-size);
+  block-size: var(--stim-avatar-size);
+  font-size: var(--stim-avatar-font-size);
+
+  &--size-sm {
+    --stim-avatar-size: var(--stim-avatar-size-sm);
+    --stim-avatar-font-size: var(--stim-avatar-font-size-sm);
+  }
+}
+```
 
 ## Boundary check
 

@@ -1,0 +1,52 @@
+.stim-text {
+  margin: 0;
+
+  &--truncate {
+    display: block;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &--tone-primary {
+    color: var(--stim-color-text-primary);
+  }
+
+  &--tone-secondary {
+    color: var(--stim-color-text-secondary);
+  }
+
+  &--tone-danger {
+    color: var(--stim-color-text-danger);
+  }
+
+  &--size-body {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  &--size-eyebrow {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  &--size-display {
+    font-size: clamp(2.25rem, 6vw, 3.75rem);
+    line-height: 1.05;
+  }
+
+  &--size-label {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    font-weight: var(--stim-font-weight-medium);
+  }
+
+  &--size-caption {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+  }
+}

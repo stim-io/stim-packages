@@ -13,6 +13,7 @@ Detailed component/package design belongs in `docs/`, not here.
 
 - `stim-packages/` owns atomic Vue components, shared layout primitives, tokens, theme definitions, and adjacent support packages for the `stim` product surface.
 - Keep product-specific screen composition and business styling decisions out of this repo; those belong in `stim/`.
+- Keep `packages/shared` below component ownership: it may provide browser/runtime primitives and package lifecycle tooling helpers, but it must not depend on `@stim-io/components`.
 - Keep styling ownership explicit: tokens and themes live here, and browser-engine patches should stay visible rather than hidden in mixed styling logic.
 - Add or widen shared primitives only when real repeated product pressure shows that a concern is durable across screens; do not absorb one-off product composition leftovers just to make `stim/` look cosmetically thinner.
 - Grow playground and test surfaces from real browser-engine or packaging friction, not from speculative framework process.
@@ -38,8 +39,8 @@ Detailed component/package design belongs in `docs/`, not here.
 - Run WebKit playground: `pnpm -C playgrounds/webkit dev`
 - Run e2e tests: `pnpm -C e2e test`
 - Install Playwright browser: `pnpm -C e2e install:browsers`
-- Dry-run pack published package: `pnpm -C packages/components pack:dry-run`
-- Dry-run publish published package: `pnpm -C packages/components publish:dry-run`
+- Dry-run pack published package: `pnpm -C packages/components run pack`
+- Dry-run release package boundary: `pnpm -C packages/components run release`
 - Run repo verify gate locally: `pnpm verify:ci`
 
 ## Key File Index
@@ -49,8 +50,11 @@ Detailed component/package design belongs in `docs/`, not here.
 - `docs/operations/documentation.md`: docs update guide and anti-duplication rules
 - `docs/operations/publishing.md`: canonical GitHub Packages publish/install rule for the package workspace
 - `docs/architecture/components.md`: canonical shared component and primitive ownership method
+- `packages/playground/`: private support package for browser-engine playground composition
+- `packages/*/scripts/pack.mjs`: package-local pack command boundary
+- `packages/*/scripts/release.mjs`: package-local release command boundary
 - `.github/workflows/verify.yml`: required PR-protection verify gate
-- `.github/workflows/publish-beta.yml`: tag-driven beta package publishing workflow
+- `.github/workflows/release-beta.yml`: tag-driven beta package release workflow
 - `../../AGENTS.md`: repo-root workspace boundary across all attached repos
 
 ## Update Rules

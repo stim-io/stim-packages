@@ -7,7 +7,8 @@ Canonical package publishing currently targets GitHub Packages for the `@stim-io
 Workspace layout:
 
 - `packages/components`: published `@stim-io/components` package
-- `packages/shared`: `@stim-io/shared`, the shared support package for this workspace; it currently powers the browser-engine verification playgrounds and can grow into broader reusable support below product/business composition
+- `packages/shared`: `@stim-io/shared`, the shared support package for browser/runtime primitives and published package lifecycle tooling below product/business composition
+- `packages/playground`: `@stim-io/playground`, private playground support that may depend on both `@stim-io/components` and `@stim-io/shared`
 - `playgrounds/*`: browser-engine verification surfaces that should grow from real friction
 - `e2e/`: small Vitest + Playwright harness for component end-to-end checks
 
