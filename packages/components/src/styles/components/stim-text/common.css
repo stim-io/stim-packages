@@ -2,12 +2,25 @@
   margin: 0;
 }
 
+.stim-text--truncate {
+  display: block;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .stim-text--tone-primary {
   color: var(--stim-color-text-primary);
 }
 
 .stim-text--tone-secondary {
   color: var(--stim-color-text-secondary);
+}
+
+.stim-text--tone-danger {
+  color: var(--stim-color-text-danger);
 }
 
 .stim-text--size-body {

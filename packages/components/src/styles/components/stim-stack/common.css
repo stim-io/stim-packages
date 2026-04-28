@@ -3,6 +3,10 @@
   flex-direction: column;
 }
 
+.stim-stack--gap-none {
+  gap: 0;
+}
+
 .stim-stack--gap-xs {
   gap: var(--stim-space-1);
 }
@@ -33,4 +37,15 @@
 
 .stim-stack--align-end {
   align-items: flex-end;
+}
+
+.stim-stack--grow {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.stim-stack--full-block {
+  block-size: 100%;
+  min-block-size: 0;
 }

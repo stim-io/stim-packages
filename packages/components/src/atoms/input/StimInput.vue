@@ -1,17 +1,32 @@
 <script setup lang="ts">
 const model = defineModel<string>({ required: true });
 
-defineProps<{
-  placeholder?: string;
-  type?: string;
-}>();
+import { computed } from "vue";
+
+const props = withDefaults(
+  defineProps<{
+    placeholder?: string;
+    size?: "sm" | "md";
+    type?: string;
+  }>(),
+  {
+    placeholder: undefined,
+    size: "md",
+    type: "text",
+  },
+);
+
+const className = computed(() => [
+  "stim-input",
+  `stim-input--size-${props.size}`,
+]);
 </script>
 
 <template>
   <input
     v-model="model"
-    class="stim-input"
+    :class="className"
     :placeholder="placeholder"
-    :type="type ?? 'text'"
+    :type="type"
   />
 </template>

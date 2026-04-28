@@ -4,12 +4,14 @@ import { computed } from "vue";
 const props = withDefaults(
   defineProps<{
     active?: boolean;
+    justify?: "start" | "center" | "between";
     tone?: "default" | "muted" | "accent";
     padding?: "sm" | "md";
     radius?: "sm" | "md" | "lg";
   }>(),
   {
     active: false,
+    justify: "start",
     tone: "default",
     padding: "md",
     radius: "md",
@@ -18,6 +20,7 @@ const props = withDefaults(
 
 const className = computed(() => [
   "stim-interactive-row",
+  `stim-interactive-row--justify-${props.justify}`,
   `stim-interactive-row--tone-${props.tone}`,
   `stim-interactive-row--padding-${props.padding}`,
   `stim-interactive-row--radius-${props.radius}`,
