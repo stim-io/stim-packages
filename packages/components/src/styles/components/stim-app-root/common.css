@@ -5,6 +5,7 @@
   min-inline-size: 0;
   min-block-size: 0;
   overflow: hidden;
+  overscroll-behavior: none;
   padding: 0;
   background: var(--stim-color-bg);
   color: var(--stim-color-text-primary);

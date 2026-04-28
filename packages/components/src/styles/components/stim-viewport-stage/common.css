@@ -1,6 +1,7 @@
 .stim-viewport-stage {
   min-block-size: 100vh;
   display: grid;
+  overscroll-behavior: none;
 }
 
 .stim-viewport-stage--align-center {

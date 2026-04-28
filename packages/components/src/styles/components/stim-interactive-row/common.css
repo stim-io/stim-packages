@@ -4,6 +4,7 @@
   align-items: center;
   gap: var(--stim-space-3);
   min-inline-size: 0;
+  overflow: hidden;
   border: 1px solid transparent;
   background: transparent;
   color: inherit;
@@ -11,13 +12,31 @@
   text-align: left;
   cursor: pointer;
   transition:
-    background-color var(--stim-motion-duration-fast) var(--stim-motion-ease-standard),
-    border-color var(--stim-motion-duration-fast) var(--stim-motion-ease-standard),
+    background-color var(--stim-motion-duration-fast)
+      var(--stim-motion-ease-standard),
+    border-color var(--stim-motion-duration-fast)
+      var(--stim-motion-ease-standard),
     box-shadow var(--stim-motion-duration-fast) var(--stim-motion-ease-standard);
 }
 
 .stim-interactive-row:hover {
-  background: color-mix(in srgb, var(--stim-color-surface-elevated) 64%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--stim-color-surface-elevated) 64%,
+    transparent
+  );
+}
+
+.stim-interactive-row--justify-start {
+  justify-content: flex-start;
+}
+
+.stim-interactive-row--justify-center {
+  justify-content: center;
+}
+
+.stim-interactive-row--justify-between {
+  justify-content: space-between;
 }
 
 .stim-interactive-row:focus-visible {
@@ -31,8 +50,12 @@
 }
 
 .stim-interactive-row--tone-accent.stim-interactive-row--active {
-  background: color-mix(in srgb, var(--stim-color-surface-accent) 16%, transparent);
-  border-color: var(--stim-color-border-strong);
+  background: color-mix(
+    in srgb,
+    var(--stim-color-surface-accent) 10%,
+    transparent
+  );
+  border-color: var(--stim-color-border-subtle);
 }
 
 .stim-interactive-row--padding-sm {

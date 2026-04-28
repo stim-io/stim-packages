@@ -10,5 +10,6 @@
   --stim-color-border-subtle: rgb(99 102 241 / 0.24);
   --stim-color-text-primary: #0f172a;
   --stim-color-text-secondary: #475569;
+  --stim-color-text-danger: #b91c1c;
   --stim-color-text-on-accent: #ffffff;
 }

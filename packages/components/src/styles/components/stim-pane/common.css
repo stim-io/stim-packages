@@ -74,4 +74,5 @@
 
 .stim-pane--scroll {
   overflow: auto;
+  overscroll-behavior: contain;
 }
