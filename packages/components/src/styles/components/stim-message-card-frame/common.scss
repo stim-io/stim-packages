@@ -1,12 +1,21 @@
 .stim-message-card-frame {
+  --stim-message-card-frame-bubble-max-inline-size: 32rem;
+  --stim-message-card-frame-card-max-inline-size: 40rem;
+
   inline-size: 100%;
 
   &--layout-bubble {
-    max-inline-size: min(100%, 42rem);
+    max-inline-size: min(
+      100%,
+      var(--stim-message-card-frame-bubble-max-inline-size)
+    );
   }
 
   &--layout-card {
-    max-inline-size: min(100%, 48rem);
+    max-inline-size: min(
+      100%,
+      var(--stim-message-card-frame-card-max-inline-size)
+    );
   }
 
   &--role-user {

@@ -1,4 +1,7 @@
 .stim-message-row {
+  --stim-message-row-content-max-inline-size: 32rem;
+  --stim-message-row-system-content-max-inline-size: 30rem;
+
   inline-size: 100%;
 
   &__inner {
@@ -6,7 +9,10 @@
   }
 
   &__content {
-    max-inline-size: min(42rem, 100%);
+    max-inline-size: min(
+      var(--stim-message-row-content-max-inline-size),
+      100%
+    );
   }
 
   &--user &__content {
@@ -14,6 +20,9 @@
   }
 
   &--system &__content {
-    max-inline-size: min(36rem, 100%);
+    max-inline-size: min(
+      var(--stim-message-row-system-content-max-inline-size),
+      100%
+    );
   }
 }
