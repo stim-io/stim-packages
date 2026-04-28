@@ -29,6 +29,11 @@
     var(--stim-color-surface-accent) 18%,
     transparent
   );
+  --stim-button-bg-disabled: color-mix(
+    in srgb,
+    var(--stim-color-surface-elevated) 64%,
+    transparent
+  );
 
   display: inline-flex;
   align-items: center;
@@ -56,6 +61,17 @@
   @include state.control-focus-ring;
   @include state.press-feedback;
   @include state.disabled-control;
+
+  &:disabled {
+    --stim-button-border-color: var(--stim-color-border-subtle);
+    --stim-button-bg: var(--stim-button-bg-disabled);
+    --stim-button-fg: var(--stim-color-text-secondary);
+    --stim-button-border-color-hover: var(--stim-button-border-color);
+    --stim-button-bg-hover: var(--stim-button-bg);
+    --stim-button-fg-hover: var(--stim-button-fg);
+
+    opacity: 1;
+  }
 
   &:hover {
     border-color: var(--stim-button-border-color-hover);
