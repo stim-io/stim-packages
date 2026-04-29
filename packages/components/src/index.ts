@@ -1,6 +1,8 @@
 export { default as StimAvatar } from "./atoms/avatar/StimAvatar.vue";
 export { default as StimBadge } from "./atoms/badge/StimBadge.vue";
 export { default as StimButton } from "./atoms/button/StimButton.vue";
+export { default as StimGridContainer } from "./atoms/grid/StimGridContainer.vue";
+export { default as StimGridPanel } from "./atoms/grid/StimGridPanel.vue";
 export { default as StimDisclosure } from "./primitives/disclosure/StimDisclosure.vue";
 export { default as StimInput } from "./atoms/input/StimInput.vue";
 export { default as StimText } from "./atoms/text/StimText.vue";

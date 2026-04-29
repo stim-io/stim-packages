@@ -1,0 +1,38 @@
+{
+  "name": "@stim-io/grid-layout",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stim-io/stim-packages.git",
+    "directory": "packages/grid-layout"
+  },
+  "homepage": "https://github.com/stim-io/stim-packages",
+  "bugs": {
+    "url": "https://github.com/stim-io/stim-packages/issues"
+  },
+  "files": [
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pack": "node ./scripts/pack.mjs",
+    "release": "node ./scripts/release.mjs"
+  },
+  "devDependencies": {
+    "@stim-io/shared": "workspace:*",
+    "cac": "7.0.0",
+    "typescript": "6.0.2"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@stim-io/components": "workspace:*",
+    "@stim-io/grid-layout": "workspace:*",
     "@stim-io/playground": "workspace:*",
     "vue": "3.5.32"
   },

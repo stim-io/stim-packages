@@ -38,6 +38,9 @@
   "peerDependencies": {
     "vue": "3.5.32"
   },
+  "dependencies": {
+    "@stim-io/grid-layout": "workspace:*"
+  },
   "devDependencies": {
     "@stim-io/shared": "workspace:*",
     "@vitejs/plugin-vue": "6.0.6",
