@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>grid-layout package fixture</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: system-ui, sans-serif;
+      }
+
+      .fixture-grid {
+        width: 600px;
+        height: 240px;
+        display: grid;
+        gap: 8px;
+        margin-block-end: 24px;
+        border: 1px solid black;
+      }
+
+      [data-stim-grid-panel] {
+        position: relative;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      [data-stim-grid-preview] {
+        border: 1px dashed black;
+      }
+
+      #content-resize,
+      #reject-resize,
+      #reject-guarded-resize,
+      #context-drag,
+      #reject-drag,
+      #reject-guarded-drag {
+        position: absolute;
+        border: 0;
+        background: rgb(28 94 184);
+        touch-action: none;
+      }
+
+      #content-resize,
+      #reject-resize,
+      #reject-guarded-resize {
+        inset-block: 0;
+        inset-inline-end: 0;
+        width: 20px;
+        cursor: col-resize;
+      }
+
+      #reject-guarded-resize {
+        inset-inline-end: 24px;
+      }
+
+      #context-drag,
+      #reject-drag,
+      #reject-guarded-drag {
+        inset-block-start: 0;
+        inset-inline-start: 0;
+        width: 24px;
+        height: 24px;
+        cursor: move;
+      }
+
+      #reject-guarded-drag {
+        inset-inline-start: 28px;
+      }
+
+      [data-stim-grid-panel="rail"],
+      [data-stim-grid-panel="a-only"] {
+        background: rgb(220 238 255);
+      }
+
+      [data-stim-grid-panel="content"],
+      [data-stim-grid-panel="b-only"],
+      [data-stim-grid-panel="reject-content"] {
+        background: rgb(240 226 255);
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div id="grid-a" class="fixture-grid" data-fixture="namespace-a">
+        <div id="preview-a" aria-hidden="true"></div>
+        <section id="rail" data-stim-grid-panel="rail">rail</section>
+        <section id="content" data-stim-grid-panel="content">
+          content
+          <button
+            id="content-resize"
+            type="button"
+            aria-label="Resize content"
+          ></button>
+        </section>
+        <section id="context" data-stim-grid-panel="context">
+          context
+          <button
+            id="context-drag"
+            type="button"
+            aria-label="Move context"
+          ></button>
+        </section>
+      </div>
+
+      <div id="grid-b" class="fixture-grid" data-fixture="namespace-b">
+        <section id="a-only" data-stim-grid-panel="a-only">a-only</section>
+        <section id="b-only" data-stim-grid-panel="b-only">b-only</section>
+      </div>
+
+      <div
+        id="grid-reject"
+        class="fixture-grid"
+        data-fixture="namespace-reject"
+      >
+        <div id="preview-reject" aria-hidden="true"></div>
+        <section id="reject-content" data-stim-grid-panel="reject-content">
+          reject-content
+          <button
+            id="reject-resize"
+            type="button"
+            aria-label="Resize rejected content"
+          ></button>
+          <button
+            id="reject-guarded-resize"
+            type="button"
+            aria-label="Resize rejected content with collision guardrails"
+          ></button>
+          <button
+            id="reject-drag"
+            type="button"
+            aria-label="Move rejected content"
+          ></button>
+          <button
+            id="reject-guarded-drag"
+            type="button"
+            aria-label="Move rejected content with collision guardrails"
+          ></button>
+        </section>
+        <section id="reject-adjacent" data-stim-grid-panel="reject-adjacent">
+          reject-adjacent
+        </section>
+      </div>
+    </main>
+
+    <script type="module">
+      import { GridNamespace } from "@stim-io/grid-layout";
+
+      const defaultPlan = {
+        mode: "default",
+        columns: 12,
+        rows: 6,
+        panels: [
+          {
+            id: "rail",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 1,
+            rowSpan: 6,
+          },
+          {
+            id: "content",
+            columnStart: 3,
+            columnSpan: 7,
+            rowStart: 1,
+            rowSpan: 6,
+          },
+          {
+            id: "context",
+            columnStart: 10,
+            columnSpan: 3,
+            rowStart: 1,
+            rowSpan: 6,
+          },
+        ],
+      };
+      const focusPlan = {
+        mode: "focus",
+        columns: 8,
+        rows: 4,
+        panels: [
+          {
+            id: "rail",
+            columnStart: 1,
+            columnSpan: 1,
+            rowStart: 1,
+            rowSpan: 4,
+          },
+          {
+            id: "content",
+            columnStart: 2,
+            columnSpan: 7,
+            rowStart: 1,
+            rowSpan: 4,
+          },
+          {
+            id: "context",
+            columnStart: 1,
+            columnSpan: 1,
+            rowStart: 1,
+            rowSpan: 1,
+            visible: false,
+          },
+        ],
+      };
+      const isolatedPlan = {
+        mode: "isolated",
+        columns: 4,
+        rows: 2,
+        panels: [
+          {
+            id: "a-only",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 1,
+            rowSpan: 2,
+          },
+          {
+            id: "b-only",
+            columnStart: 3,
+            columnSpan: 2,
+            rowStart: 1,
+            rowSpan: 2,
+          },
+        ],
+      };
+      const rejectPlan = {
+        mode: "reject",
+        columns: 12,
+        rows: 4,
+        panels: [
+          {
+            id: "reject-content",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 1,
+            rowSpan: 4,
+          },
+          {
+            id: "reject-adjacent",
+            columnStart: 5,
+            columnSpan: 4,
+            rowStart: 1,
+            rowSpan: 4,
+          },
+        ],
+      };
+
+      const nsA = GridNamespace.create("fixture-a");
+      const nsB = GridNamespace.create("fixture-b");
+      const nsReject = GridNamespace.create("fixture-reject");
+      const events = [];
+      const layoutRequests = [];
+      const dragRequests = [];
+      const rejectedLayoutRequests = [];
+      const rejectedResizePlans = [];
+      const rejectedDragPlans = [];
+      nsA.events.on("layoutchange", (event) => events.push(event));
+      nsA.events.on("layoutrequest", (event) => {
+        layoutRequests.push(event);
+        if (event.interaction === "drag") {
+          dragRequests.push(event);
+        }
+        nsA.layout.apply(event.plan);
+      });
+      nsA.register.container(document.querySelector("#grid-a"), {
+        plan: defaultPlan,
+      });
+      nsA.register.preview(document.querySelector("#preview-a"));
+      nsA.register.panel(document.querySelector("#rail"), { id: "rail" });
+      nsA.register.panel(document.querySelector("#content"), { id: "content" });
+      nsA.register.panel(document.querySelector("#context"), { id: "context" });
+      nsA.register.handle(document.querySelector("#content-resize"), {
+        id: "content-inline-end",
+        panelId: "content",
+        edge: "inline-end",
+        minColumnSpan: 2,
+      });
+      nsA.register.dragHandle(document.querySelector("#context-drag"), {
+        id: "context-drag",
+        panelId: "context",
+      });
+      nsB.register.container(document.querySelector("#grid-b"), {
+        plan: isolatedPlan,
+      });
+      nsB.register.panel(document.querySelector("#a-only"), { id: "a-only" });
+      nsB.register.panel(document.querySelector("#b-only"), { id: "b-only" });
+      nsReject.events.on("layoutrequest", (event) => {
+        rejectedLayoutRequests.push(event);
+        if (event.interaction === "resize") {
+          rejectedResizePlans.push(event.plan);
+        }
+        if (event.interaction === "drag") {
+          rejectedDragPlans.push(event.plan);
+        }
+      });
+      nsReject.register.container(document.querySelector("#grid-reject"), {
+        plan: rejectPlan,
+      });
+      nsReject.register.preview(document.querySelector("#preview-reject"));
+      nsReject.register.panel(document.querySelector("#reject-content"), {
+        id: "reject-content",
+      });
+      nsReject.register.panel(document.querySelector("#reject-adjacent"), {
+        id: "reject-adjacent",
+      });
+      nsReject.register.handle(document.querySelector("#reject-resize"), {
+        id: "reject-inline-end",
+        panelId: "reject-content",
+        edge: "inline-end",
+        resize: {
+          strategy: "free",
+        },
+      });
+      nsReject.register.handle(
+        document.querySelector("#reject-guarded-resize"),
+        {
+          id: "reject-guarded-inline-end",
+          panelId: "reject-content",
+          edge: "inline-end",
+          resize: {
+            strategy: "guarded",
+          },
+        },
+      );
+      nsReject.register.dragHandle(document.querySelector("#reject-drag"), {
+        id: "reject-drag",
+        panelId: "reject-content",
+      });
+      nsReject.register.dragHandle(
+        document.querySelector("#reject-guarded-drag"),
+        {
+          id: "reject-guarded-drag",
+          panelId: "reject-content",
+          drag: {
+            strategy: "guarded",
+          },
+        },
+      );
+
+      window.__gridLayoutFixture = {
+        events,
+        layoutRequests,
+        dragRequests,
+        rejectedLayoutRequests,
+        rejectedResizePlans,
+        rejectedDragPlans,
+        applyFocus: () => nsA.layout.apply(focusPlan),
+        exerciseStaleRegistration: () => {
+          const ns = GridNamespace.create("stale-registration");
+          const first = document.createElement("section");
+          const second = document.createElement("section");
+          const firstRegistration = ns.register.panel(first, { id: "same" });
+          const secondRegistration = ns.register.panel(second, { id: "same" });
+
+          firstRegistration.unregister();
+
+          const trackedSecond = ns.elements.panel("same")?.element === second;
+          secondRegistration.unregister();
+          ns.destroy();
+
+          return trackedSecond;
+        },
+        getPlanMode: (name) => (name === "a" ? nsA : nsB).layout.get()?.mode,
+        getPanelSpan: (id) => {
+          const placement = nsA.layout
+            .get()
+            ?.panels.find((panel) => panel.id === id);
+
+          return placement
+            ? { columnSpan: placement.columnSpan, rowSpan: placement.rowSpan }
+            : null;
+        },
+        getRejectedPanelSpan: () => {
+          const placement = nsReject.layout
+            .get()
+            ?.panels.find((panel) => panel.id === "reject-content");
+
+          return placement
+            ? { columnSpan: placement.columnSpan, rowSpan: placement.rowSpan }
+            : null;
+        },
+        getRejectedAdjacentPanelSpan: () => {
+          const placement = nsReject.layout
+            .get()
+            ?.panels.find((panel) => panel.id === "reject-adjacent");
+
+          return placement
+            ? { columnSpan: placement.columnSpan, rowSpan: placement.rowSpan }
+            : null;
+        },
+        getPanelStart: (id) => {
+          const placement = nsA.layout
+            .get()
+            ?.panels.find((panel) => panel.id === id);
+
+          return placement
+            ? {
+                columnStart: placement.columnStart,
+                rowStart: placement.rowStart,
+              }
+            : null;
+        },
+        getNamespace: (selector) =>
+          document.querySelector(selector)?.dataset.stimGridNamespace,
+        getGridTemplate: (selector) =>
+          getComputedStyle(document.querySelector(selector))
+            .gridTemplateColumns,
+        getPanelPlacement: (selector) => {
+          const element = document.querySelector(selector);
+          const style = getComputedStyle(element);
+
+          return {
+            hidden: element.hidden,
+            visible: element.dataset.stimGridPanelVisible,
+            columnStart: style.gridColumnStart,
+            columnEnd: style.gridColumnEnd,
+            rowStart: style.gridRowStart,
+            rowEnd: style.gridRowEnd,
+          };
+        },
+        getPreviewPlacement: () => {
+          const element = document.querySelector("#preview-a");
+          const style = getComputedStyle(element);
+
+          return {
+            hidden: element.hidden,
+            panel: element.dataset.stimGridPreviewPanel,
+            interaction: element.dataset.stimGridPreviewInteraction,
+            columnStart: style.gridColumnStart,
+            columnEnd: style.gridColumnEnd,
+            rowStart: style.gridRowStart,
+            rowEnd: style.gridRowEnd,
+          };
+        },
+        getRejectedPreviewPlacement: () => {
+          const element = document.querySelector("#preview-reject");
+          const style = getComputedStyle(element);
+
+          return {
+            hidden: element.hidden,
+            panel: element.dataset.stimGridPreviewPanel,
+            interaction: element.dataset.stimGridPreviewInteraction,
+            columnStart: style.gridColumnStart,
+            columnEnd: style.gridColumnEnd,
+            rowStart: style.gridRowStart,
+            rowEnd: style.gridRowEnd,
+          };
+        },
+      };
+
+      document.documentElement.dataset.ready = "true";
+    </script>
+  </body>
+</html>

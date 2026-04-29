@@ -14,6 +14,7 @@ Detailed component/package design belongs in `docs/`, not here.
 - `stim-packages/` owns atomic Vue components, shared layout primitives, tokens, theme definitions, and adjacent support packages for the `stim` product surface.
 - Keep product-specific screen composition and business styling decisions out of this repo; those belong in `stim/`.
 - Keep `packages/shared` below component ownership: it may provide browser/runtime primitives and package lifecycle tooling helpers, but it must not depend on `@stim-io/components`.
+- Keep `packages/grid-layout` as framework-light namespace-scoped grid geometry and interaction infrastructure; product modes own layout state/selection, and full dashboard compaction, persistence, and business panel semantics stay out of this package.
 - Keep styling ownership explicit: tokens and themes live here, and browser-engine patches should stay visible rather than hidden in mixed styling logic.
 - Add or widen shared primitives only when real repeated product pressure shows that a concern is durable across screens; do not absorb one-off product composition leftovers just to make `stim/` look cosmetically thinner.
 - Grow playground and test surfaces from real browser-engine or packaging friction, not from speculative framework process.
@@ -46,10 +47,10 @@ Detailed component/package design belongs in `docs/`, not here.
 ## Key File Index
 
 - `AGENTS.md`: stable constraints and file index
-- `README.md`: workspace/package overview and local verification notes
 - `docs/operations/documentation.md`: docs update guide and anti-duplication rules
 - `docs/operations/publishing.md`: canonical GitHub Packages publish/install rule for the package workspace
 - `docs/architecture/components.md`: canonical shared component and primitive ownership method
+- `packages/grid-layout/`: framework-light `@stim-io/grid-layout` DOM engine for namespace-scoped flat grid layout, drag, resize, preview, and layout proposal events
 - `packages/playground/`: private support package for browser-engine playground composition
 - `packages/*/scripts/pack.mjs`: package-local pack command boundary
 - `packages/*/scripts/release.mjs`: package-local release command boundary
