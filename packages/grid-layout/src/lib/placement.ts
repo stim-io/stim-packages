@@ -42,14 +42,28 @@ export function getAxisStart(
   placement: GridPanelPlacement,
   axis: "columns" | "rows",
 ) {
-  return axis === "columns" ? placement.columnStart : placement.rowStart;
+  switch (axis) {
+    case "columns":
+      return placement.columnStart;
+    case "rows":
+      return placement.rowStart;
+    default:
+      throw new Error(`Unsupported grid axis: ${String(axis)}`);
+  }
 }
 
 export function getAxisSpan(
   placement: GridPanelPlacement,
   axis: "columns" | "rows",
 ) {
-  return axis === "columns" ? placement.columnSpan : placement.rowSpan;
+  switch (axis) {
+    case "columns":
+      return placement.columnSpan;
+    case "rows":
+      return placement.rowSpan;
+    default:
+      throw new Error(`Unsupported grid axis: ${String(axis)}`);
+  }
 }
 
 export function clampDelta(value: number, min: number, max: number) {

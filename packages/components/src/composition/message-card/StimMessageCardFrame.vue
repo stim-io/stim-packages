@@ -26,10 +26,12 @@ const surfaceTone = computed(() => {
       return "accent" as const;
     case "system":
       return "muted" as const;
-    default:
+    case "assistant":
       return props.layoutFamily === "card"
         ? ("elevated" as const)
         : ("default" as const);
+    default:
+      throw new Error(`Unsupported role tone: ${String(props.roleTone)}`);
   }
 });
 

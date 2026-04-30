@@ -34,6 +34,7 @@ export function createResizePlan(
   options: CreateGridResizePlanOptions,
 ): GridLayoutPlan | null {
   const placement = findVisiblePlacement(options.plan, options.panelId);
+  const strategy = options.strategy ?? "adjacent";
 
   if (!placement) {
     return null;
@@ -41,71 +42,76 @@ export function createResizePlan(
 
   const nextPlacement = { ...placement };
 
-  if (options.edge === "inline-end") {
-    const columnCount = getNumericTrackCount(options.plan.columns);
+  switch (options.edge) {
+    case "inline-end": {
+      const columnCount = getNumericTrackCount(options.plan.columns);
 
-    if (!columnCount) {
-      return null;
+      if (!columnCount) {
+        return null;
+      }
+
+      const deltaColumns = getBoundedResizeDelta({
+        plan: options.plan,
+        placement,
+        axis: "columns",
+        trackCount: columnCount,
+        requestedDelta: options.deltaCells,
+        minSpan: options.minColumnSpan,
+        strategy,
+      });
+
+      if (deltaColumns === 0) {
+        return null;
+      }
+
+      nextPlacement.columnSpan = placement.columnSpan + deltaColumns;
+
+      return createResizeResultPlan({
+        plan: options.plan,
+        panelId: options.panelId,
+        placement,
+        nextPlacement,
+        axis: "columns",
+        delta: deltaColumns,
+        strategy,
+      });
     }
+    case "block-end": {
+      const rowCount = getNumericTrackCount(options.plan.rows);
 
-    const deltaColumns = getBoundedResizeDelta({
-      plan: options.plan,
-      placement,
-      axis: "columns",
-      trackCount: columnCount,
-      requestedDelta: options.deltaCells,
-      minSpan: options.minColumnSpan,
-      strategy: options.strategy,
-    });
+      if (!rowCount) {
+        return null;
+      }
 
-    if (deltaColumns === 0) {
-      return null;
+      const deltaRows = getBoundedResizeDelta({
+        plan: options.plan,
+        placement,
+        axis: "rows",
+        trackCount: rowCount,
+        requestedDelta: options.deltaCells,
+        minSpan: options.minRowSpan,
+        strategy,
+      });
+
+      if (deltaRows === 0) {
+        return null;
+      }
+
+      nextPlacement.rowSpan = placement.rowSpan + deltaRows;
+
+      return createResizeResultPlan({
+        plan: options.plan,
+        panelId: options.panelId,
+        placement,
+        nextPlacement,
+        axis: "rows",
+        delta: deltaRows,
+        strategy,
+      });
     }
-
-    nextPlacement.columnSpan = placement.columnSpan + deltaColumns;
-
-    return createResizeResultPlan({
-      plan: options.plan,
-      panelId: options.panelId,
-      placement,
-      nextPlacement,
-      axis: "columns",
-      delta: deltaColumns,
-      strategy: options.strategy,
-    });
+    default:
+      throw new Error(`Unsupported resize edge: ${String(options.edge)}`);
   }
-
-  const rowCount = getNumericTrackCount(options.plan.rows);
-
-  if (!rowCount) {
-    return null;
-  }
-
-  const deltaRows = getBoundedResizeDelta({
-    plan: options.plan,
-    placement,
-    axis: "rows",
-    trackCount: rowCount,
-    requestedDelta: options.deltaCells,
-    minSpan: options.minRowSpan,
-    strategy: options.strategy,
-  });
-
-  if (deltaRows === 0) {
-    return null;
-  }
-
-  nextPlacement.rowSpan = placement.rowSpan + deltaRows;
-
-  return createResizeResultPlan({
-    plan: options.plan,
-    panelId: options.panelId,
-    placement,
-    nextPlacement,
-    axis: "rows",
-    delta: deltaRows,
-    strategy: options.strategy,
-  });
 }
 
 function createResizeResultPlan(options: {
@@ -115,28 +121,34 @@ function createResizeResultPlan(options: {
   nextPlacement: GridPanelPlacement;
   axis: "columns" | "rows";
   delta: number;
-  strategy?: GridResizeStrategy;
+  strategy: GridResizeStrategy;
 }) {
-  if (options.strategy === "free" || options.strategy === "guarded") {
-    return replacePlacement(
-      options.plan,
-      options.panelId,
-      options.nextPlacement,
-    );
+  switch (options.strategy) {
+    case "free":
+    case "guarded":
+      return replacePlacement(
+        options.plan,
+        options.panelId,
+        options.nextPlacement,
+      );
+    case "adjacent":
+      return replacePlacements(
+        options.plan,
+        new Map([
+          [options.panelId, options.nextPlacement],
+          ...getAdjustedAdjacentPlacements({
+            plan: options.plan,
+            placement: options.placement,
+            axis: options.axis,
+            delta: options.delta,
+          }).map((adjacent) => [adjacent.id, adjacent] as const),
+        ]),
+      );
+    default:
+      throw new Error(
+        `Unsupported resize strategy: ${String(options.strategy)}`,
+      );
   }
-
-  return replacePlacements(
-    options.plan,
-    new Map([
-      [options.panelId, options.nextPlacement],
-      ...getAdjustedAdjacentPlacements({
-        plan: options.plan,
-        placement: options.placement,
-        axis: options.axis,
-        delta: options.delta,
-      }).map((adjacent) => [adjacent.id, adjacent] as const),
-    ]),
-  );
 }
 
 function getBoundedResizeDelta(options: {
@@ -146,7 +158,7 @@ function getBoundedResizeDelta(options: {
   trackCount: number;
   requestedDelta: number;
   minSpan: number;
-  strategy?: GridResizeStrategy;
+  strategy: GridResizeStrategy;
 }) {
   const { axis, placement, requestedDelta, minSpan, strategy, trackCount } =
     options;
@@ -155,47 +167,50 @@ function getBoundedResizeDelta(options: {
   const minDelta = minSpan - span;
   const maxDeltaToTrackEnd = trackCount - end + 1;
 
-  if (strategy === "free") {
-    return clampDelta(requestedDelta, minDelta, maxDeltaToTrackEnd);
-  }
+  switch (strategy) {
+    case "free":
+      return clampDelta(requestedDelta, minDelta, maxDeltaToTrackEnd);
+    case "guarded": {
+      const maxDeltaToForwardCollision =
+        requestedDelta > 0
+          ? getNearestForwardCollisionGap(options)
+          : maxDeltaToTrackEnd;
 
-  if (strategy === "guarded") {
-    const maxDeltaToForwardCollision =
-      requestedDelta > 0
-        ? getNearestForwardCollisionGap(options)
-        : maxDeltaToTrackEnd;
+      return clampDelta(
+        requestedDelta,
+        minDelta,
+        Math.min(maxDeltaToTrackEnd, maxDeltaToForwardCollision),
+      );
+    }
+    case "adjacent": {
+      const adjacentPlacements = getAdjacentPlacements(options);
 
-    return clampDelta(
-      requestedDelta,
-      minDelta,
-      Math.min(maxDeltaToTrackEnd, maxDeltaToForwardCollision),
-    );
-  }
+      if (requestedDelta > 0) {
+        const maxDeltaToAdjacentMinSpan = adjacentPlacements.length
+          ? Math.min(
+              ...adjacentPlacements.map((adjacent) =>
+                Math.max(0, getAxisSpan(adjacent, axis) - minSpan),
+              ),
+            )
+          : Number.POSITIVE_INFINITY;
+        const maxDeltaToForwardBlocker = getNearestForwardGap(options);
 
-  const adjacentPlacements = getAdjacentPlacements(options);
-
-  if (requestedDelta > 0) {
-    const maxDeltaToAdjacentMinSpan = adjacentPlacements.length
-      ? Math.min(
-          ...adjacentPlacements.map((adjacent) =>
-            Math.max(0, getAxisSpan(adjacent, axis) - minSpan),
+        return clampDelta(
+          requestedDelta,
+          minDelta,
+          Math.min(
+            maxDeltaToTrackEnd,
+            maxDeltaToAdjacentMinSpan,
+            maxDeltaToForwardBlocker,
           ),
-        )
-      : Number.POSITIVE_INFINITY;
-    const maxDeltaToForwardBlocker = getNearestForwardGap(options);
+        );
+      }
 
-    return clampDelta(
-      requestedDelta,
-      minDelta,
-      Math.min(
-        maxDeltaToTrackEnd,
-        maxDeltaToAdjacentMinSpan,
-        maxDeltaToForwardBlocker,
-      ),
-    );
+      return clampDelta(requestedDelta, minDelta, maxDeltaToTrackEnd);
+    }
+    default:
+      throw new Error(`Unsupported resize strategy: ${String(strategy)}`);
   }
-
-  return clampDelta(requestedDelta, minDelta, maxDeltaToTrackEnd);
 }
 
 function getAdjustedAdjacentPlacements(options: {
@@ -209,18 +224,21 @@ function getAdjustedAdjacentPlacements(options: {
   }
 
   return getAdjacentPlacements(options).map((adjacent) => {
-    if (options.axis === "columns") {
-      return {
-        ...adjacent,
-        columnStart: adjacent.columnStart + options.delta,
-        columnSpan: adjacent.columnSpan - options.delta,
-      };
+    switch (options.axis) {
+      case "columns":
+        return {
+          ...adjacent,
+          columnStart: adjacent.columnStart + options.delta,
+          columnSpan: adjacent.columnSpan - options.delta,
+        };
+      case "rows":
+        return {
+          ...adjacent,
+          rowStart: adjacent.rowStart + options.delta,
+          rowSpan: adjacent.rowSpan - options.delta,
+        };
+      default:
+        throw new Error(`Unsupported grid axis: ${String(options.axis)}`);
     }
-
-    return {
-      ...adjacent,
-      rowStart: adjacent.rowStart + options.delta,
-      rowSpan: adjacent.rowSpan - options.delta,
-    };
   });
 }

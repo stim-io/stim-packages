@@ -33,7 +33,7 @@ export interface GridPanelRegistrationOptions {
 
 export type GridResizeEdge = "inline-end" | "block-end";
 export type GridResizeStrategy = "adjacent" | "free" | "guarded";
-export type GridDragStrategy = "free" | "guarded";
+export type GridDragStrategy = "free" | "guarded" | "push" | "reflow";
 
 export interface GridResizeOptions {
   strategy?: GridResizeStrategy;
@@ -52,11 +52,13 @@ export interface GridHandleRegistrationOptions {
   minRowSpan?: number;
 }
 
-export interface GridDragHandleRegistrationOptions {
+export interface GridDragTriggerRegistrationOptions {
   id: string;
   panelId: GridPanelId;
   drag?: GridDragOptions;
 }
+
+export interface GridDragHandleRegistrationOptions extends GridDragTriggerRegistrationOptions {}
 
 export interface GridPreviewRegistrationOptions {
   id?: string;
@@ -80,11 +82,13 @@ export interface GridHandleRegistration {
   unregister(): void;
 }
 
-export interface GridDragHandleRegistration {
+export interface GridDragTriggerRegistration {
   id: string;
   element: HTMLElement;
   unregister(): void;
 }
+
+export interface GridDragHandleRegistration extends GridDragTriggerRegistration {}
 
 export interface GridPreviewRegistration {
   id: string;
@@ -104,6 +108,7 @@ export interface GridResizeLayoutRequestEvent {
 export interface GridDragLayoutRequestEvent {
   namespace: GridNamespaceId;
   interaction: "drag";
+  dragTriggerId: string;
   dragHandleId: string;
   panelId: GridPanelId;
   plan: GridLayoutPlan;
@@ -121,13 +126,25 @@ export interface GridNamespaceEventMap {
   layoutrequest: GridLayoutRequestEvent;
   register: {
     namespace: GridNamespaceId;
-    kind: "container" | "panel" | "handle" | "dragHandle" | "preview";
+    kind:
+      | "container"
+      | "panel"
+      | "handle"
+      | "dragTrigger"
+      | "dragHandle"
+      | "preview";
     id: string;
     element: HTMLElement;
   };
   unregister: {
     namespace: GridNamespaceId;
-    kind: "container" | "panel" | "handle" | "dragHandle" | "preview";
+    kind:
+      | "container"
+      | "panel"
+      | "handle"
+      | "dragTrigger"
+      | "dragHandle"
+      | "preview";
     id: string;
   };
 }

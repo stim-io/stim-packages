@@ -145,51 +145,62 @@ export class GridResizeController {
       return null;
     }
 
-    if (resize.handle.edge === "inline-end") {
-      if (!columnCount) {
-        return null;
+    switch (resize.handle.edge) {
+      case "inline-end": {
+        if (!columnCount) {
+          return null;
+        }
+
+        const cellSize = getTrackStepSize(
+          container,
+          "columns",
+          columnCount,
+          rect,
+        );
+        if (cellSize <= 0) {
+          return null;
+        }
+
+        const deltaCells = Math.round(
+          (event.clientX - resize.startX) / cellSize,
+        );
+        return createResizePlan({
+          plan: resize.startPlan,
+          panelId: resize.handle.panelId,
+          edge: resize.handle.edge,
+          strategy: resize.handle.resize.strategy,
+          deltaCells,
+          minColumnSpan: resize.handle.minColumnSpan,
+          minRowSpan: resize.handle.minRowSpan,
+        });
       }
+      case "block-end": {
+        if (!rowCount) {
+          return null;
+        }
 
-      const cellSize = getTrackStepSize(
-        container,
-        "columns",
-        columnCount,
-        rect,
-      );
-      if (cellSize <= 0) {
-        return null;
+        const cellSize = getTrackStepSize(container, "rows", rowCount, rect);
+        if (cellSize <= 0) {
+          return null;
+        }
+
+        const deltaCells = Math.round(
+          (event.clientY - resize.startY) / cellSize,
+        );
+        return createResizePlan({
+          plan: resize.startPlan,
+          panelId: resize.handle.panelId,
+          edge: resize.handle.edge,
+          strategy: resize.handle.resize.strategy,
+          deltaCells,
+          minColumnSpan: resize.handle.minColumnSpan,
+          minRowSpan: resize.handle.minRowSpan,
+        });
       }
-
-      const deltaCells = Math.round((event.clientX - resize.startX) / cellSize);
-      return createResizePlan({
-        plan: resize.startPlan,
-        panelId: resize.handle.panelId,
-        edge: resize.handle.edge,
-        strategy: resize.handle.resize.strategy,
-        deltaCells,
-        minColumnSpan: resize.handle.minColumnSpan,
-        minRowSpan: resize.handle.minRowSpan,
-      });
+      default:
+        throw new Error(
+          `Unsupported resize edge: ${String(resize.handle.edge)}`,
+        );
     }
-
-    if (!rowCount) {
-      return null;
-    }
-
-    const cellSize = getTrackStepSize(container, "rows", rowCount, rect);
-    if (cellSize <= 0) {
-      return null;
-    }
-
-    const deltaCells = Math.round((event.clientY - resize.startY) / cellSize);
-    return createResizePlan({
-      plan: resize.startPlan,
-      panelId: resize.handle.panelId,
-      edge: resize.handle.edge,
-      strategy: resize.handle.resize.strategy,
-      deltaCells,
-      minColumnSpan: resize.handle.minColumnSpan,
-      minRowSpan: resize.handle.minRowSpan,
-    });
   }
 }

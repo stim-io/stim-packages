@@ -11,6 +11,7 @@ export function projectPlan(options: {
   plan: GridLayoutPlan;
   containers: Iterable<GridContainerRegistration>;
   panels: Iterable<GridPanelRegistration>;
+  skipPanelIds?: ReadonlySet<GridPanelId>;
 }) {
   for (const container of options.containers) {
     container.element.dataset.stimGridMode = options.plan.mode ?? "";
@@ -25,6 +26,10 @@ export function projectPlan(options: {
   );
 
   for (const panel of options.panels) {
+    if (options.skipPanelIds?.has(panel.id)) {
+      continue;
+    }
+
     const placement = placementByPanel.get(panel.id);
 
     if (!placement || placement.visible === false) {

@@ -4,7 +4,11 @@
   "type": "module",
   "packageManager": "pnpm@10.32.1",
   "scripts": {
-    "verify:ci": "node ./scripts/verify.mjs"
+    "format": "prettier --check package.json pnpm-workspace.yaml \"scripts/**/*.mjs\"",
+    "format:write": "prettier --write package.json pnpm-workspace.yaml \"scripts/**/*.mjs\"",
+    "postinstall": "node ./scripts/postinstall.mjs",
+    "precommit": "node ./scripts/precommit.mjs",
+    "guard": "node ./scripts/guard.mjs"
   },
   "devDependencies": {
     "@stim-io/shared": "workspace:*",

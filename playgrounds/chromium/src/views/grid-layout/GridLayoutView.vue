@@ -10,9 +10,14 @@ import type {
 type DemoMode = "default" | "focus" | "compact";
 
 const mode = ref<DemoMode>("default");
-const dragStrategy = ref<GridDragStrategy>("free");
+const dragStrategy = ref<GridDragStrategy>("reflow");
 const resizeStrategy = ref<GridResizeStrategy>("adjacent");
-const dragStrategies: readonly GridDragStrategy[] = ["free", "guarded"];
+const dragStrategies: readonly GridDragStrategy[] = [
+  "reflow",
+  "push",
+  "free",
+  "guarded",
+];
 const resizeStrategies: readonly GridResizeStrategy[] = [
   "adjacent",
   "free",

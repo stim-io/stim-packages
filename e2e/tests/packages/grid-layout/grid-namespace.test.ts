@@ -44,6 +44,16 @@ test("grid namespace applies plans and isolates tracked elements", async () => {
   await expect
     .poll(() => page.evaluate(() => window.__gridLayoutFixture.events.length))
     .toBeGreaterThan(0);
+  expect(
+    await page.evaluate(() =>
+      window.__gridLayoutFixture.getDefaultDragStrategy(),
+    ),
+  ).toBe("free");
+  expect(
+    await page.evaluate(() =>
+      window.__gridLayoutFixture.getDragHandleLifecycleKinds(),
+    ),
+  ).toEqual(["dragHandle", "dragHandle"]);
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -423,6 +433,934 @@ test("grid namespace guarded drag stops before visible panel collisions", async 
   await page.close();
 });
 
+test("grid namespace push drag moves blocking panels in the proposal", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reject-content"),
+  );
+  const initialAdjacentPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reject-adjacent"),
+  );
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.rejectedDragPlans.length,
+  );
+  const dragHandle = page.locator("#reject-drag");
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected push drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2 + 260,
+    dragHandleBox.y + dragHandleBox.height / 2,
+    { steps: 6 },
+  );
+
+  const previewDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getRejectedPreviewPlacement(),
+  );
+  const contentDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reject-content"),
+  );
+  const contentSnapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#reject-content"),
+  );
+  const adjacentDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reject-adjacent"),
+  );
+
+  expect(previewDuringDrag.hidden).toBe(false);
+  expect(previewDuringDrag.panel).toBe("reject-content");
+  expect(previewDuringDrag.interaction).toBe("drag");
+  expect(contentDuringDrag.columnStart).toBe(initialPlacement.columnStart);
+  expect(contentSnapshotDuringDrag.active).toBe("true");
+  expect(contentSnapshotDuringDrag.x).toBeGreaterThan(0);
+  expect(adjacentDuringDrag.columnStart).toBe("8");
+
+  await page.mouse.up();
+
+  const pushPlan = await page.evaluate(() =>
+    window.__gridLayoutFixture.rejectedDragPlans.at(-1),
+  );
+  const pushedContent = pushPlan?.panels.find(
+    (panel) => panel.id === "reject-content",
+  );
+  const pushedAdjacent = pushPlan?.panels.find(
+    (panel) => panel.id === "reject-adjacent",
+  );
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#reject-content")
+            .columnStart,
+      ),
+    )
+    .toBe(initialPlacement.columnStart);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#reject-adjacent")
+            .columnStart,
+      ),
+    )
+    .toBe(initialAdjacentPlacement.columnStart);
+
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.rejectedDragPlans.length,
+    ),
+  ).toBeGreaterThan(initialDragPlans);
+  expect(pushedContent?.columnStart).toBe(6);
+  expect(pushedContent?.columnSpan).toBe(2);
+  expect(pushedAdjacent?.columnStart).toBe(8);
+  expect(pushedAdjacent?.columnSpan).toBe(4);
+
+  await page.close();
+});
+
+test("grid namespace push drag stays at the last resolved placement when overdragged", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reject-content"),
+  );
+  const initialAdjacentPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reject-adjacent"),
+  );
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.rejectedDragPlans.length,
+  );
+  const dragHandle = page.locator("#reject-drag");
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected push drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2 + 520,
+    dragHandleBox.y + dragHandleBox.height / 2,
+    { steps: 8 },
+  );
+
+  const previewDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getRejectedPreviewPlacement(),
+  );
+  const contentDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reject-content"),
+  );
+  const contentSnapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#reject-content"),
+  );
+  const adjacentDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reject-adjacent"),
+  );
+
+  expect(previewDuringDrag.hidden).toBe(false);
+  expect(previewDuringDrag.panel).toBe("reject-content");
+  expect(previewDuringDrag.interaction).toBe("drag");
+  expect(contentDuringDrag.columnStart).toBe(initialPlacement.columnStart);
+  expect(contentSnapshotDuringDrag.active).toBe("true");
+  expect(contentSnapshotDuringDrag.x).toBeGreaterThan(0);
+  expect(adjacentDuringDrag.columnStart).toBe("9");
+
+  await page.mouse.up();
+
+  const pushPlan = await page.evaluate(() =>
+    window.__gridLayoutFixture.rejectedDragPlans.at(-1),
+  );
+  const pushedContent = pushPlan?.panels.find(
+    (panel) => panel.id === "reject-content",
+  );
+  const pushedAdjacent = pushPlan?.panels.find(
+    (panel) => panel.id === "reject-adjacent",
+  );
+
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.rejectedDragPlans.length,
+    ),
+  ).toBeGreaterThan(initialDragPlans);
+  expect(pushedContent?.columnStart).toBe(7);
+  expect(pushedAdjacent?.columnStart).toBe(9);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#reject-content")
+            .columnStart,
+      ),
+    )
+    .toBe(initialPlacement.columnStart);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#reject-adjacent")
+            .columnStart,
+      ),
+    )
+    .toBe(initialAdjacentPlacement.columnStart);
+
+  await page.close();
+});
+
+test("grid namespace push drag advances through blockers without skipping them", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialActivePlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#push-skip-active"),
+  );
+  const initialBlockerPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#push-skip-blocker"),
+  );
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.pushSkipDragPlans.length,
+  );
+  const dragHandle = page.locator("#push-skip-drag");
+  await dragHandle.scrollIntoViewIfNeeded();
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected push skip drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2 + 520,
+    dragHandleBox.y + dragHandleBox.height / 2,
+    { steps: 8 },
+  );
+
+  const activeDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#push-skip-active"),
+  );
+  const activeSnapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#push-skip-active"),
+  );
+  const blockerDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#push-skip-blocker"),
+  );
+
+  expect(activeDuringDrag.columnStart).toBe(initialActivePlacement.columnStart);
+  expect(activeSnapshotDuringDrag.active).toBe("true");
+  expect(activeSnapshotDuringDrag.x).toBeGreaterThan(0);
+  expect(blockerDuringDrag.columnStart).toBe("4");
+
+  await page.mouse.up();
+
+  const pushPlan = await page.evaluate(() =>
+    window.__gridLayoutFixture.pushSkipDragPlans.at(-1),
+  );
+  const pushedActive = pushPlan?.panels.find(
+    (panel) => panel.id === "push-skip-active",
+  );
+  const pushedBlocker = pushPlan?.panels.find(
+    (panel) => panel.id === "push-skip-blocker",
+  );
+
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.pushSkipDragPlans.length,
+    ),
+  ).toBeGreaterThan(initialDragPlans);
+  expect(pushedActive?.columnStart).toBe(3);
+  expect(pushedBlocker?.columnStart).toBe(4);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#push-skip-active")
+            .columnStart,
+      ),
+    )
+    .toBe(initialActivePlacement.columnStart);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#push-skip-blocker")
+            .columnStart,
+      ),
+    )
+    .toBe(initialBlockerPlacement.columnStart);
+
+  await page.close();
+});
+
+test("grid namespace push drag supports vertical blocking panels", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.pushDragPlans.length,
+  );
+  const initialActivePlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#push-vertical-active"),
+  );
+  const initialBlockerPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#push-vertical-blocker"),
+  );
+  const dragHandle = page.locator("#push-vertical-drag");
+  await dragHandle.scrollIntoViewIfNeeded();
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected vertical push drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2 + 100,
+    { steps: 6 },
+  );
+
+  const previewDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPushPreviewPlacement(),
+  );
+  const activeDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#push-vertical-active"),
+  );
+  const activeSnapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#push-vertical-active"),
+  );
+  const blockerDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#push-vertical-blocker"),
+  );
+
+  expect(previewDuringDrag.hidden).toBe(false);
+  expect(previewDuringDrag.panel).toBe("push-vertical-active");
+  expect(previewDuringDrag.interaction).toBe("drag");
+  expect(activeDuringDrag.rowStart).toBe(initialActivePlacement.rowStart);
+  expect(activeSnapshotDuringDrag.active).toBe("true");
+  expect(activeSnapshotDuringDrag.y).toBeGreaterThan(0);
+  expect(blockerDuringDrag.rowStart).toBe("5");
+
+  await page.mouse.up();
+
+  const pushPlan = await page.evaluate(() =>
+    window.__gridLayoutFixture.pushDragPlans.at(-1),
+  );
+  const pushedActive = pushPlan?.panels.find(
+    (panel) => panel.id === "push-vertical-active",
+  );
+  const pushedBlocker = pushPlan?.panels.find(
+    (panel) => panel.id === "push-vertical-blocker",
+  );
+
+  expect(
+    await page.evaluate(() => window.__gridLayoutFixture.pushDragPlans.length),
+  ).toBeGreaterThan(initialDragPlans);
+  expect(pushedActive?.rowStart).toBe(3);
+  expect(pushedActive?.rowSpan).toBe(2);
+  expect(pushedBlocker?.rowStart).toBe(5);
+  expect(pushedBlocker?.rowSpan).toBe(2);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#push-vertical-active")
+            .rowStart,
+      ),
+    )
+    .toBe(initialActivePlacement.rowStart);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#push-vertical-blocker")
+            .rowStart,
+      ),
+    )
+    .toBe(initialBlockerPlacement.rowStart);
+
+  await page.close();
+});
+
+test("grid namespace accepted push drag keeps pushed panels after commit", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+  await page.evaluate(() =>
+    window.__gridLayoutFixture.setAcceptPushRequests(true),
+  );
+
+  const dragHandle = page.locator("#push-vertical-drag");
+  await dragHandle.scrollIntoViewIfNeeded();
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected accepted push drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2 + 100,
+    { steps: 6 },
+  );
+  await page.mouse.up();
+
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#push-vertical-active")
+            .rowStart,
+      ),
+    )
+    .toBe("3");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#push-vertical-blocker")
+            .rowStart,
+      ),
+    )
+    .toBe("5");
+
+  await page.close();
+});
+
+test("grid namespace push drag does not grow the grid when blocked", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.pushDragPlans.length,
+  );
+  const dragHandle = page.locator("#push-blocked-drag");
+  await dragHandle.scrollIntoViewIfNeeded();
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected blocked push drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2 + 100,
+    dragHandleBox.y + dragHandleBox.height / 2,
+    { steps: 6 },
+  );
+
+  const previewDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPushPreviewPlacement(),
+  );
+
+  expect(previewDuringDrag.hidden).toBe(true);
+
+  await page.mouse.up();
+
+  expect(
+    await page.evaluate(() => window.__gridLayoutFixture.pushDragPlans.length),
+  ).toBe(initialDragPlans);
+
+  await page.close();
+});
+
+test("grid namespace reflow drag moves blockers and compacts vacated panels", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialActivePlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-active"),
+  );
+  const initialBlockerPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-blocker"),
+  );
+  const initialLowerPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-lower"),
+  );
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.reflowDragPlans.length,
+  );
+  await page.evaluate(() =>
+    document.querySelector("#grid-reflow")?.scrollIntoView({ block: "center" }),
+  );
+  const dragHandle = page.locator("#reflow-drag");
+  await dragHandle.scrollIntoViewIfNeeded();
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected reflow drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2 + 320,
+    dragHandleBox.y + dragHandleBox.height / 2,
+    { steps: 8 },
+  );
+
+  const activeDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-active"),
+  );
+  const activeSnapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#reflow-active"),
+  );
+  const blockerDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-blocker"),
+  );
+  const lowerDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-lower"),
+  );
+
+  expect(activeDuringDrag.columnStart).toBe(initialActivePlacement.columnStart);
+  expect(activeDuringDrag.rowStart).toBe("1");
+  expect(activeSnapshotDuringDrag.active).toBe("true");
+  expect(activeSnapshotDuringDrag.x).toBeGreaterThan(0);
+  expect(blockerDuringDrag.columnStart).toBe("3");
+  expect(blockerDuringDrag.rowStart).toBe("3");
+  expect(lowerDuringDrag.columnStart).toBe("1");
+  expect(lowerDuringDrag.rowStart).toBe("1");
+
+  await page.mouse.up();
+
+  const reflowPlan = await page.evaluate(() =>
+    window.__gridLayoutFixture.reflowDragPlans.at(-1),
+  );
+  const reflowActive = reflowPlan?.panels.find(
+    (panel) => panel.id === "reflow-active",
+  );
+  const reflowBlocker = reflowPlan?.panels.find(
+    (panel) => panel.id === "reflow-blocker",
+  );
+  const reflowLower = reflowPlan?.panels.find(
+    (panel) => panel.id === "reflow-lower",
+  );
+
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.reflowDragPlans.length,
+    ),
+  ).toBeGreaterThan(initialDragPlans);
+  expect(reflowActive?.columnStart).toBe(3);
+  expect(reflowActive?.rowStart).toBe(1);
+  expect(reflowBlocker?.columnStart).toBe(3);
+  expect(reflowBlocker?.rowStart).toBe(3);
+  expect(reflowLower?.columnStart).toBe(1);
+  expect(reflowLower?.rowStart).toBe(1);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#reflow-active")
+            .columnStart,
+      ),
+    )
+    .toBe(initialActivePlacement.columnStart);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#reflow-blocker")
+            .rowStart,
+      ),
+    )
+    .toBe(initialBlockerPlacement.rowStart);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#reflow-lower")
+            .rowStart,
+      ),
+    )
+    .toBe(initialLowerPlacement.rowStart);
+
+  await page.close();
+});
+
+test("grid namespace reflow drag stops at the last no-deformation placement", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialActivePlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-active"),
+  );
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.reflowDragPlans.length,
+  );
+  await page.evaluate(() =>
+    document.querySelector("#grid-reflow")?.scrollIntoView({ block: "center" }),
+  );
+  const dragHandle = page.locator("#reflow-drag");
+  await dragHandle.scrollIntoViewIfNeeded();
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected bounded reflow drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2 + 250,
+    { steps: 8 },
+  );
+
+  const activeDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-active"),
+  );
+  const activeSnapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#reflow-active"),
+  );
+
+  expect(activeDuringDrag.rowStart).toBe(initialActivePlacement.rowStart);
+  expect(activeSnapshotDuringDrag.active).toBe("true");
+  expect(activeSnapshotDuringDrag.y).toBeGreaterThan(0);
+
+  await page.mouse.up();
+
+  const reflowPlan = await page.evaluate(() =>
+    window.__gridLayoutFixture.reflowDragPlans.at(-1),
+  );
+  const reflowActive = reflowPlan?.panels.find(
+    (panel) => panel.id === "reflow-active",
+  );
+
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.reflowDragPlans.length,
+    ),
+  ).toBeGreaterThan(initialDragPlans);
+  expect(reflowActive?.rowStart).toBe(2);
+  expect(reflowPlan?.rows).toBe(5);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#reflow-active")
+            .rowStart,
+      ),
+    )
+    .toBe(initialActivePlacement.rowStart);
+
+  await page.close();
+});
+
+test("grid namespace reflow drag does not push blockers beyond fixed rows", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialActivePlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-fixed-active"),
+  );
+  const initialBlockerPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-fixed-blocker"),
+  );
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.reflowFixedDragPlans.length,
+  );
+  await page.evaluate(() =>
+    document
+      .querySelector("#grid-reflow-fixed")
+      ?.scrollIntoView({ block: "center" }),
+  );
+  const dragHandle = page.locator("#reflow-fixed-drag");
+  await dragHandle.scrollIntoViewIfNeeded();
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected fixed-row reflow drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2 + 200,
+    { steps: 8 },
+  );
+
+  const activeDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-fixed-active"),
+  );
+  const activeSnapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#reflow-fixed-active"),
+  );
+  const blockerDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#reflow-fixed-blocker"),
+  );
+
+  expect(activeDuringDrag.rowStart).toBe(initialActivePlacement.rowStart);
+  expect(activeSnapshotDuringDrag.active).toBe("true");
+  expect(activeSnapshotDuringDrag.y).toBeGreaterThan(0);
+  expect(blockerDuringDrag.rowStart).toBe(initialBlockerPlacement.rowStart);
+
+  await page.mouse.up();
+
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.reflowFixedDragPlans.length,
+    ),
+  ).toBe(initialDragPlans);
+
+  await page.close();
+});
+
+test("grid namespace clears drag snapshot when active panel unregisters mid-drag", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.reflowDragPlans.length,
+  );
+  await page.evaluate(() =>
+    document.querySelector("#grid-reflow")?.scrollIntoView({ block: "center" }),
+  );
+  const dragHandle = page.locator("#reflow-drag");
+  await dragHandle.scrollIntoViewIfNeeded();
+  const dragHandleBox = await dragHandle.boundingBox();
+
+  if (!dragHandleBox) {
+    throw new Error("expected unregister reflow drag handle to be visible");
+  }
+
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2,
+    dragHandleBox.y + dragHandleBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    dragHandleBox.x + dragHandleBox.width / 2 + 160,
+    dragHandleBox.y + dragHandleBox.height / 2,
+    { steps: 4 },
+  );
+
+  const snapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#reflow-active"),
+  );
+
+  expect(snapshotDuringDrag.active).toBe("true");
+  expect(snapshotDuringDrag.x).toBeGreaterThan(0);
+
+  await page.evaluate(() =>
+    window.__gridLayoutFixture.unregisterReflowActive(),
+  );
+
+  const snapshotAfterUnregister = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#reflow-active"),
+  );
+
+  expect(snapshotAfterUnregister.active).toBeUndefined();
+  expect(snapshotAfterUnregister.x).toBe(0);
+
+  await page.mouse.up();
+
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.reflowDragPlans.length,
+    ),
+  ).toBe(initialDragPlans);
+
+  await page.close();
+});
+
+test("grid namespace drag trigger can live outside the target panel", async () => {
+  const page = await browserSuite.browser().newPage();
+
+  await page.goto(viteSuite.url(), { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('html[data-ready="true"]');
+
+  const initialDragPlans = await page.evaluate(
+    () => window.__gridLayoutFixture.triggerDragPlans.length,
+  );
+  const initialPlacement = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelPlacement("#trigger-panel"),
+  );
+  const trigger = page.locator("#external-drag-trigger");
+  await trigger.scrollIntoViewIfNeeded();
+  const triggerBox = await trigger.boundingBox();
+
+  if (!triggerBox) {
+    throw new Error("expected external drag trigger to be visible");
+  }
+
+  expect(
+    await page.evaluate(() =>
+      window.__gridLayoutFixture.getExternalDragTriggerCount(),
+    ),
+  ).toBe(1);
+  expect(
+    await page.evaluate(() =>
+      window.__gridLayoutFixture.getExternalDragHandleCount(),
+    ),
+  ).toBe(0);
+
+  const registeredDataset = await page.evaluate(() =>
+    window.__gridLayoutFixture.getDragTriggerDataset("#external-drag-trigger"),
+  );
+
+  expect(registeredDataset.trigger).toBe("external-drag-trigger");
+  expect(registeredDataset.handle).toBe("external-drag-trigger");
+  expect(registeredDataset.panel).toBe("trigger-panel");
+  expect(registeredDataset.strategy).toBe("free");
+
+  await page.mouse.move(
+    triggerBox.x + triggerBox.width / 2,
+    triggerBox.y + triggerBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    triggerBox.x + triggerBox.width / 2 + 180,
+    triggerBox.y + triggerBox.height / 2,
+    { steps: 6 },
+  );
+
+  const draggingDataset = await page.evaluate(() =>
+    window.__gridLayoutFixture.getDragTriggerDataset("#external-drag-trigger"),
+  );
+
+  expect(draggingDataset.dragging).toBe("true");
+
+  await page.mouse.up();
+
+  const triggerRequest = await page.evaluate(() =>
+    window.__gridLayoutFixture.triggerDragRequests.at(-1),
+  );
+
+  expect(triggerRequest?.dragTriggerId).toBe("external-drag-trigger");
+  expect(triggerRequest?.dragHandleId).toBe("external-drag-trigger");
+  expect(triggerRequest?.panelId).toBe("trigger-panel");
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.triggerDragPlans.length,
+    ),
+  ).toBeGreaterThan(initialDragPlans);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__gridLayoutFixture.getPanelPlacement("#trigger-panel")
+            .columnStart,
+      ),
+    )
+    .toBe("2");
+
+  await page.evaluate(() =>
+    window.__gridLayoutFixture.unregisterExternalDragTrigger(),
+  );
+
+  const unregisteredDataset = await page.evaluate(() =>
+    window.__gridLayoutFixture.getDragTriggerDataset("#external-drag-trigger"),
+  );
+  const dragPlansAfterUnregister = await page.evaluate(
+    () => window.__gridLayoutFixture.triggerDragPlans.length,
+  );
+  const unregisteredTriggerBox = await trigger.boundingBox();
+
+  if (!unregisteredTriggerBox) {
+    throw new Error(
+      "expected unregistered external drag trigger to remain visible",
+    );
+  }
+
+  expect(
+    await page.evaluate(() =>
+      window.__gridLayoutFixture.getExternalDragTriggerCount(),
+    ),
+  ).toBe(0);
+  expect(unregisteredDataset.trigger).toBeUndefined();
+  expect(unregisteredDataset.handle).toBeUndefined();
+  expect(unregisteredDataset.panel).toBeUndefined();
+  expect(unregisteredDataset.strategy).toBeUndefined();
+
+  await page.mouse.move(
+    unregisteredTriggerBox.x + unregisteredTriggerBox.width / 2,
+    unregisteredTriggerBox.y + unregisteredTriggerBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    unregisteredTriggerBox.x + unregisteredTriggerBox.width / 2 + 180,
+    unregisteredTriggerBox.y + unregisteredTriggerBox.height / 2,
+    { steps: 6 },
+  );
+  await page.mouse.up();
+
+  expect(
+    await page.evaluate(
+      () => window.__gridLayoutFixture.triggerDragPlans.length,
+    ),
+  ).toBe(dragPlansAfterUnregister);
+  expect(
+    await page.evaluate(
+      () =>
+        window.__gridLayoutFixture.getPanelPlacement("#trigger-panel")
+          .columnStart,
+    ),
+  ).toBe("2");
+  expect(initialPlacement.columnStart).toBe("1");
+
+  await page.close();
+});
+
 test("grid namespace drag handle updates panel placement", async () => {
   const page = await browserSuite.browser().newPage();
 
@@ -456,6 +1394,9 @@ test("grid namespace drag handle updates panel placement", async () => {
   const startDuringDrag = await page.evaluate(() =>
     window.__gridLayoutFixture.getPanelStart("context"),
   );
+  const snapshotDuringDrag = await page.evaluate(() =>
+    window.__gridLayoutFixture.getPanelSnapshot("#context"),
+  );
   const dragRequestsDuringDrag = await page.evaluate(
     () => window.__gridLayoutFixture.dragRequests.length,
   );
@@ -464,6 +1405,8 @@ test("grid namespace drag handle updates panel placement", async () => {
   expect(previewDuringDrag.panel).toBe("context");
   expect(previewDuringDrag.interaction).toBe("drag");
   expect(startDuringDrag?.columnStart).toBe(initialStart?.columnStart);
+  expect(snapshotDuringDrag.active).toBe("true");
+  expect(snapshotDuringDrag.x).toBeLessThan(0);
   expect(dragRequestsDuringDrag).toBe(0);
 
   await page.mouse.up();

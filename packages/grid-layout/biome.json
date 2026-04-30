@@ -1,0 +1,20 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+  "formatter": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "style": {
+        "useDefaultSwitchClause": "error"
+      },
+      "suspicious": {
+        "noDuplicateCase": "error",
+        "noFallthroughSwitchClause": "error",
+        "useDefaultSwitchClauseLast": "error"
+      }
+    }
+  }
+}

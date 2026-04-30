@@ -4,7 +4,8 @@ import process from "node:process";
 
 const rootDir = process.cwd();
 const bannedProtocols = ["file:", "link:"];
-const exactVersionPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z-.]+)?(?:\+[0-9A-Za-z-.]+)?$/;
+const exactVersionPattern =
+  /^\d+\.\d+\.\d+(?:-[0-9A-Za-z-.]+)?(?:\+[0-9A-Za-z-.]+)?$/;
 const dependencyFields = [
   "dependencies",
   "devDependencies",
@@ -28,7 +29,7 @@ for (const packageJsonPath of packageJsonPaths) {
       if (specifier.startsWith("workspace:")) continue;
 
       const bannedProtocol = bannedProtocols.find((protocol) =>
-        specifier.startsWith(protocol)
+        specifier.startsWith(protocol),
       );
 
       if (bannedProtocol) {
@@ -56,18 +57,20 @@ for (const packageJsonPath of packageJsonPaths) {
 }
 
 if (violations.length > 0) {
-  console.error("verify:ci failed: invalid dependency specifiers found.\n");
+  console.error("guard failed: invalid dependency specifiers found.\n");
 
   for (const violation of violations) {
     console.error(
-      `- ${path.relative(rootDir, violation.packageJsonPath)} :: ${violation.field}.${violation.name} = ${violation.specifier} (${violation.reason})`
+      `- ${path.relative(rootDir, violation.packageJsonPath)} :: ${violation.field}.${violation.name} = ${violation.specifier} (${violation.reason})`,
     );
   }
 
   process.exit(1);
 }
 
-console.log(`verify:ci passed: checked ${packageJsonPaths.length} package.json files.`);
+console.log(
+  `guard passed: checked ${packageJsonPaths.length} package.json files.`,
+);
 
 async function collectPackageJsonPaths(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -77,7 +80,9 @@ async function collectPackageJsonPaths(directory) {
     if (entry.isDirectory()) {
       if (ignoredDirectories.has(entry.name)) continue;
 
-      paths.push(...(await collectPackageJsonPaths(path.join(directory, entry.name))));
+      paths.push(
+        ...(await collectPackageJsonPaths(path.join(directory, entry.name))),
+      );
       continue;
     }
 
