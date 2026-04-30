@@ -1,10 +1,13 @@
 import type {
   GridLayoutPlan,
   GridPanelId,
+  GridPanelPlacement,
   GridPanelRegistration,
   GridPreviewRegistration,
   GridContainerRegistration,
 } from "../types";
+import { gridData } from "./grid-data";
+import { findVisiblePlacement, isPlacementVisible } from "./placement";
 import { toTemplate } from "./plan";
 
 export function projectPlan(options: {
@@ -14,7 +17,7 @@ export function projectPlan(options: {
   skipPanelIds?: ReadonlySet<GridPanelId>;
 }) {
   for (const container of options.containers) {
-    container.element.dataset.stimGridMode = options.plan.mode ?? "";
+    gridData.set(container.element, "mode", options.plan.mode ?? "");
     container.element.style.gridTemplateColumns = toTemplate(
       options.plan.columns,
     );
@@ -32,18 +35,16 @@ export function projectPlan(options: {
 
     const placement = placementByPanel.get(panel.id);
 
-    if (!placement || placement.visible === false) {
-      panel.element.dataset.stimGridPanelVisible = "false";
+    if (!placement || !isPlacementVisible(placement)) {
+      gridData.set(panel.element, "panelVisible", "false");
       panel.element.hidden = true;
-      panel.element.style.gridColumn = "";
-      panel.element.style.gridRow = "";
+      clearPlacementStyle(panel.element);
       continue;
     }
 
     panel.element.hidden = false;
-    panel.element.dataset.stimGridPanelVisible = "true";
-    panel.element.style.gridColumn = `${placement.columnStart} / span ${placement.columnSpan}`;
-    panel.element.style.gridRow = `${placement.rowStart} / span ${placement.rowSpan}`;
+    gridData.set(panel.element, "panelVisible", "true");
+    projectPlacementStyle(panel.element, placement);
   }
 }
 
@@ -53,30 +54,49 @@ export function showPreview(options: {
   interaction: "drag" | "resize";
   previews: Iterable<GridPreviewRegistration>;
 }) {
-  const placement = options.plan.panels.find(
-    (panel) => panel.id === options.panelId,
-  );
+  const placement = findVisiblePlacement(options.plan, options.panelId);
 
-  if (!placement || placement.visible === false) {
+  if (!placement) {
     hidePreview(options.previews);
     return;
   }
 
   for (const preview of options.previews) {
     preview.element.hidden = false;
-    preview.element.dataset.stimGridPreviewPanel = options.panelId;
-    preview.element.dataset.stimGridPreviewInteraction = options.interaction;
-    preview.element.style.gridColumn = `${placement.columnStart} / span ${placement.columnSpan}`;
-    preview.element.style.gridRow = `${placement.rowStart} / span ${placement.rowSpan}`;
+    gridData.set(preview.element, "previewPanel", options.panelId);
+    gridData.set(preview.element, "previewInteraction", options.interaction);
+    projectPlacementStyle(preview.element, placement);
   }
 }
 
 export function hidePreview(previews: Iterable<GridPreviewRegistration>) {
   for (const preview of previews) {
     preview.element.hidden = true;
-    preview.element.style.gridColumn = "";
-    preview.element.style.gridRow = "";
-    delete preview.element.dataset.stimGridPreviewPanel;
-    delete preview.element.dataset.stimGridPreviewInteraction;
+    clearPlacementStyle(preview.element);
+    gridData.clear(preview.element, "previewPanel");
+    gridData.clear(preview.element, "previewInteraction");
   }
+}
+
+function projectPlacementStyle(
+  element: HTMLElement,
+  placement: GridPanelPlacement,
+) {
+  element.style.gridColumn = formatPlacementTrack(
+    placement.columnStart,
+    placement.columnSpan,
+  );
+  element.style.gridRow = formatPlacementTrack(
+    placement.rowStart,
+    placement.rowSpan,
+  );
+}
+
+function clearPlacementStyle(element: HTMLElement) {
+  element.style.gridColumn = "";
+  element.style.gridRow = "";
+}
+
+function formatPlacementTrack(start: number, span: number) {
+  return `${start} / span ${span}`;
 }

@@ -46,16 +46,16 @@ Before publishing `@stim-io/components`, run:
 - `pnpm -C playgrounds/chromium typecheck`
 - `pnpm -C playgrounds/webkit typecheck`
 - `pnpm -C e2e typecheck`
-- `pnpm -C packages/components run pack`
+- `pnpm -C packages/components run payload`
 - `pnpm -C packages/components run release -- --target=all`
 
 Before publishing `@stim-io/shared`, run:
 
 - `pnpm -C packages/shared typecheck`
-- `pnpm -C packages/shared run pack`
+- `pnpm -C packages/shared run payload`
 - `pnpm -C packages/shared run release -- --target=all`
 
-The goal is to confirm that each package payload matches the committed package boundary before publish.
+The goal is to confirm that each package payload matches the committed package boundary before publish without modeling payload verification as an npm or pnpm tarball-generation step.
 
 ## First publish command
 
@@ -66,7 +66,7 @@ pnpm -C packages/components run release -- --target=release --no-dry-run
 pnpm -C packages/shared run release -- --target=release --no-dry-run
 ```
 
-Each package owns its core lifecycle scripts under its local `./scripts/` directory. Package-local `scripts/pack.mjs` uses `cac`, accepts `--target=all|pack`, and defaults to dry-run `all`. Package-local `scripts/release.mjs` uses `cac`, accepts `--target=all|release`, and defaults to dry-run `all`; pass `--no-dry-run` only for the actual release. Shared, process-level mechanics such as command execution and package metadata reads come from `@stim-io/shared/node`; release policy stays in the package-local script.
+Each package owns its core lifecycle scripts under its local `./scripts/` directory. Package-local `scripts/payload.mjs` verifies the repo-owned package payload boundary without calling `npm pack` or `pnpm pack`. Package-local `scripts/release.mjs` uses `cac`, accepts `--target=all|release`, and defaults to dry-run `all`; pass `--no-dry-run` only for the actual release. Shared, process-level mechanics such as command execution, package metadata reads, and payload checks come from `@stim-io/shared/node`; release policy stays in the package-local script.
 
 That command requires valid GitHub Packages auth at publish time, but it should not require extra repo-local path tricks.
 

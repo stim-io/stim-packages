@@ -262,7 +262,7 @@ function releaseConfig() {
         ["pnpm", "-C", "playgrounds/chromium", "typecheck"],
         ["pnpm", "-C", "playgrounds/webkit", "typecheck"],
         ["pnpm", "-C", "e2e", "typecheck"],
-        ["pnpm", "-C", "packages/components", "run", "pack"],
+        ["pnpm", "-C", "packages/components", "run", "payload"],
         [
           "pnpm",
           "-C",
@@ -281,7 +281,7 @@ function releaseConfig() {
         ["pnpm", "run", "guard"],
         ["pnpm", "-C", "packages/components", "build"],
         ["pnpm", "-C", "packages/shared", "typecheck"],
-        ["pnpm", "-C", "packages/shared", "run", "pack"],
+        ["pnpm", "-C", "packages/shared", "run", "payload"],
         [
           "pnpm",
           "-C",

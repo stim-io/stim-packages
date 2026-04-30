@@ -33,6 +33,7 @@ export function assertPublicPackage(
   packageRoot: string,
   action: string,
 ): Promise<PackageJson>;
+export function verifyPackagePayload(packageRoot: string): Promise<void>;
 export function emptyDirectory(directory: string): Promise<void>;
 export function hasFilesWithExtensions(
   directory: string,

@@ -1,20 +1,19 @@
 import type { GridLayoutPlan, GridPanelPlacement } from "../types";
-import { getAxisSpan, getAxisStart } from "./placement";
+import { type GridAxis, gridAxis } from "./axis";
+import { isPlacementVisible } from "./placement";
 
 export function getAdjacentPlacements(options: {
   plan: GridLayoutPlan;
   placement: GridPanelPlacement;
-  axis: "columns" | "rows";
+  axis: GridAxis;
 }) {
-  const end =
-    getAxisStart(options.placement, options.axis) +
-    getAxisSpan(options.placement, options.axis);
+  const end = gridAxis.end(options.placement, options.axis);
 
   return options.plan.panels.filter(
     (panel) =>
       panel.id !== options.placement.id &&
-      panel.visible !== false &&
-      getAxisStart(panel, options.axis) === end &&
+      isPlacementVisible(panel) &&
+      gridAxis.start(panel, options.axis) === end &&
       rangesOverlapOnCrossAxis(panel, options.placement, options.axis),
   );
 }
@@ -22,20 +21,19 @@ export function getAdjacentPlacements(options: {
 export function getNearestForwardGap(options: {
   plan: GridLayoutPlan;
   placement: GridPanelPlacement;
-  axis: "columns" | "rows";
+  axis: GridAxis;
   trackCount: number;
 }) {
-  const start = getAxisStart(options.placement, options.axis);
-  const end = start + getAxisSpan(options.placement, options.axis);
+  const end = gridAxis.end(options.placement, options.axis);
   const nearestBlockingStart = options.plan.panels
     .filter(
       (panel) =>
         panel.id !== options.placement.id &&
-        panel.visible !== false &&
-        getAxisStart(panel, options.axis) > end &&
+        isPlacementVisible(panel) &&
+        gridAxis.start(panel, options.axis) > end &&
         rangesOverlapOnCrossAxis(panel, options.placement, options.axis),
     )
-    .map((panel) => getAxisStart(panel, options.axis))
+    .map((panel) => gridAxis.start(panel, options.axis))
     .sort((a, b) => a - b)[0];
 
   if (nearestBlockingStart === undefined) {
@@ -48,20 +46,19 @@ export function getNearestForwardGap(options: {
 export function getNearestForwardCollisionGap(options: {
   plan: GridLayoutPlan;
   placement: GridPanelPlacement;
-  axis: "columns" | "rows";
+  axis: GridAxis;
   trackCount: number;
 }) {
-  const start = getAxisStart(options.placement, options.axis);
-  const end = start + getAxisSpan(options.placement, options.axis);
+  const end = gridAxis.end(options.placement, options.axis);
   const nearestBlockingStart = options.plan.panels
     .filter(
       (panel) =>
         panel.id !== options.placement.id &&
-        panel.visible !== false &&
-        getAxisStart(panel, options.axis) >= end &&
+        isPlacementVisible(panel) &&
+        gridAxis.start(panel, options.axis) >= end &&
         rangesOverlapOnCrossAxis(panel, options.placement, options.axis),
     )
-    .map((panel) => getAxisStart(panel, options.axis))
+    .map((panel) => gridAxis.start(panel, options.axis))
     .sort((a, b) => a - b)[0];
 
   if (nearestBlockingStart === undefined) {
@@ -74,7 +71,7 @@ export function getNearestForwardCollisionGap(options: {
 export function rangesOverlapOnCrossAxis(
   a: GridPanelPlacement,
   b: GridPanelPlacement,
-  axis: "columns" | "rows",
+  axis: GridAxis,
 ) {
   switch (axis) {
     case "columns":
@@ -87,7 +84,7 @@ export function rangesOverlapOnCrossAxis(
         b.columnSpan,
       );
     default:
-      throw new Error(`Unsupported grid axis: ${String(axis)}`);
+      return gridAxis.unsupported(axis);
   }
 }
 
@@ -108,7 +105,7 @@ export function hasPlacementCollision(options: {
   return options.plan.panels.some(
     (panel) =>
       panel.id !== options.placement.id &&
-      panel.visible !== false &&
+      isPlacementVisible(panel) &&
       placementOverlaps(panel, options.placement),
   );
 }

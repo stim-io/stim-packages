@@ -147,6 +147,10 @@ export class GridNamespaceContext {
     this.layers.interaction.plan.candidate = plan;
   }
 
+  clearInteractionCandidatePlan() {
+    this.setInteractionCandidatePlan(null);
+  }
+
   activateDragSnapshotLayer(panelId: GridPanelId) {
     this.layers.snapshot.drag.activePanelId = panelId;
     this.layers.snapshot.drag.deltaX = 0;
@@ -171,8 +175,8 @@ export class GridNamespaceContext {
 
   clearDragSnapshotLayer(panelId?: GridPanelId) {
     if (
-      panelId &&
-      this.layers.snapshot.drag.activePanelId &&
+      panelId !== undefined &&
+      this.layers.snapshot.drag.activePanelId !== null &&
       this.layers.snapshot.drag.activePanelId !== panelId
     ) {
       return;
@@ -209,7 +213,7 @@ export class GridNamespaceContext {
   clearInteraction() {
     this.activeResize = null;
     this.activeDrag = null;
-    this.setInteractionCandidatePlan(null);
+    this.clearInteractionCandidatePlan();
     this.clearDragSnapshotLayer();
   }
 }
