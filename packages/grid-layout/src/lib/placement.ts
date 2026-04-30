@@ -6,11 +6,15 @@ export function findVisiblePlacement(
 ) {
   const placement = plan.panels.find((panel) => panel.id === panelId);
 
-  if (!placement || placement.visible === false) {
+  if (!placement || !isPlacementVisible(placement)) {
     return null;
   }
 
   return placement;
+}
+
+export function isPlacementVisible(placement: GridPanelPlacement) {
+  return placement.visible !== false;
 }
 
 export function replacePlacement(
@@ -36,34 +40,6 @@ export function replacePlacements(
       (placement) => replacements.get(placement.id) ?? placement,
     ),
   };
-}
-
-export function getAxisStart(
-  placement: GridPanelPlacement,
-  axis: "columns" | "rows",
-) {
-  switch (axis) {
-    case "columns":
-      return placement.columnStart;
-    case "rows":
-      return placement.rowStart;
-    default:
-      throw new Error(`Unsupported grid axis: ${String(axis)}`);
-  }
-}
-
-export function getAxisSpan(
-  placement: GridPanelPlacement,
-  axis: "columns" | "rows",
-) {
-  switch (axis) {
-    case "columns":
-      return placement.columnSpan;
-    case "rows":
-      return placement.rowSpan;
-    default:
-      throw new Error(`Unsupported grid axis: ${String(axis)}`);
-  }
 }
 
 export function clampDelta(value: number, min: number, max: number) {

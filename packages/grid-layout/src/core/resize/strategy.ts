@@ -5,6 +5,7 @@ import type {
   GridResizeEdge,
   GridResizeStrategy,
 } from "../../types";
+import { type GridAxis, gridAxis } from "../../lib/axis";
 import {
   getAdjacentPlacements,
   getNearestForwardCollisionGap,
@@ -12,13 +13,12 @@ import {
 } from "../../lib/collision";
 import {
   clampDelta,
-  getAxisSpan,
-  getAxisStart,
   findVisiblePlacement,
   replacePlacement,
   replacePlacements,
 } from "../../lib/placement";
 import { getNumericTrackCount } from "../../lib/plan";
+import { unreachable } from "../../lib/unreachable";
 
 export interface CreateGridResizePlanOptions {
   plan: GridLayoutPlan;
@@ -35,6 +35,7 @@ export function createResizePlan(
 ): GridLayoutPlan | null {
   const placement = findVisiblePlacement(options.plan, options.panelId);
   const strategy = options.strategy ?? "adjacent";
+  const edge = options.edge;
 
   if (!placement) {
     return null;
@@ -42,7 +43,7 @@ export function createResizePlan(
 
   const nextPlacement = { ...placement };
 
-  switch (options.edge) {
+  switch (edge) {
     case "inline-end": {
       const columnCount = getNumericTrackCount(options.plan.columns);
 
@@ -110,7 +111,7 @@ export function createResizePlan(
       });
     }
     default:
-      throw new Error(`Unsupported resize edge: ${String(options.edge)}`);
+      return unreachable(edge, "Unsupported resize edge");
   }
 }
 
@@ -119,11 +120,13 @@ function createResizeResultPlan(options: {
   panelId: GridPanelId;
   placement: GridPanelPlacement;
   nextPlacement: GridPanelPlacement;
-  axis: "columns" | "rows";
+  axis: GridAxis;
   delta: number;
   strategy: GridResizeStrategy;
 }) {
-  switch (options.strategy) {
+  const strategy = options.strategy;
+
+  switch (strategy) {
     case "free":
     case "guarded":
       return replacePlacement(
@@ -145,16 +148,14 @@ function createResizeResultPlan(options: {
         ]),
       );
     default:
-      throw new Error(
-        `Unsupported resize strategy: ${String(options.strategy)}`,
-      );
+      return unreachable(strategy, "Unsupported resize strategy");
   }
 }
 
 function getBoundedResizeDelta(options: {
   plan: GridLayoutPlan;
   placement: GridPanelPlacement;
-  axis: "columns" | "rows";
+  axis: GridAxis;
   trackCount: number;
   requestedDelta: number;
   minSpan: number;
@@ -162,8 +163,8 @@ function getBoundedResizeDelta(options: {
 }) {
   const { axis, placement, requestedDelta, minSpan, strategy, trackCount } =
     options;
-  const span = getAxisSpan(placement, axis);
-  const end = getAxisStart(placement, axis) + span;
+  const span = gridAxis.span(placement, axis);
+  const end = gridAxis.start(placement, axis) + span;
   const minDelta = minSpan - span;
   const maxDeltaToTrackEnd = trackCount - end + 1;
 
@@ -189,7 +190,7 @@ function getBoundedResizeDelta(options: {
         const maxDeltaToAdjacentMinSpan = adjacentPlacements.length
           ? Math.min(
               ...adjacentPlacements.map((adjacent) =>
-                Math.max(0, getAxisSpan(adjacent, axis) - minSpan),
+                Math.max(0, gridAxis.span(adjacent, axis) - minSpan),
               ),
             )
           : Number.POSITIVE_INFINITY;
@@ -209,36 +210,29 @@ function getBoundedResizeDelta(options: {
       return clampDelta(requestedDelta, minDelta, maxDeltaToTrackEnd);
     }
     default:
-      throw new Error(`Unsupported resize strategy: ${String(strategy)}`);
+      return unreachable(strategy, "Unsupported resize strategy");
   }
 }
 
 function getAdjustedAdjacentPlacements(options: {
   plan: GridLayoutPlan;
   placement: GridPanelPlacement;
-  axis: "columns" | "rows";
+  axis: GridAxis;
   delta: number;
 }) {
   if (options.delta === 0) {
     return [];
   }
 
-  return getAdjacentPlacements(options).map((adjacent) => {
-    switch (options.axis) {
-      case "columns":
-        return {
-          ...adjacent,
-          columnStart: adjacent.columnStart + options.delta,
-          columnSpan: adjacent.columnSpan - options.delta,
-        };
-      case "rows":
-        return {
-          ...adjacent,
-          rowStart: adjacent.rowStart + options.delta,
-          rowSpan: adjacent.rowSpan - options.delta,
-        };
-      default:
-        throw new Error(`Unsupported grid axis: ${String(options.axis)}`);
-    }
-  });
+  return getAdjacentPlacements(options).map((adjacent) =>
+    gridAxis.setSpan(
+      gridAxis.setStart(
+        adjacent,
+        options.axis,
+        gridAxis.start(adjacent, options.axis) + options.delta,
+      ),
+      options.axis,
+      gridAxis.span(adjacent, options.axis) - options.delta,
+    ),
+  );
 }

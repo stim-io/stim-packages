@@ -5,6 +5,10 @@ const workspaceOwnedPaths = new Set(["package.json", "pnpm-workspace.yaml"]);
 
 const packageBoundaries = [
   {
+    directory: "packages/aesthetic",
+    checks: ["format", "typecheck"],
+  },
+  {
     directory: "packages/grid-layout",
     checks: ["lint", "format"],
   },

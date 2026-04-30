@@ -1,4 +1,5 @@
 import type { GridContainerRegistration } from "../types";
+import { type GridAxis, gridAxis } from "./axis";
 
 export function getContainerForElement(
   containers: Iterable<GridContainerRegistration>,
@@ -14,7 +15,7 @@ export function getContainerForElement(
 
 export function getTrackStepSize(
   container: HTMLElement,
-  axis: "columns" | "rows",
+  axis: GridAxis,
   trackCount: number,
   rect: DOMRect,
 ) {
@@ -29,11 +30,13 @@ export function getTrackStepSize(
 }
 
 function getAxisGeometry(options: {
-  axis: "columns" | "rows";
+  axis: GridAxis;
   rect: DOMRect;
   style: CSSStyleDeclaration;
 }) {
-  switch (options.axis) {
+  const axis = options.axis;
+
+  switch (axis) {
     case "columns":
       return {
         gap: parseCssPixelValue(options.style.columnGap),
@@ -45,7 +48,7 @@ function getAxisGeometry(options: {
         totalSize: options.rect.height,
       };
     default:
-      throw new Error(`Unsupported grid axis: ${String(options.axis)}`);
+      return gridAxis.unsupported(axis);
   }
 }
 

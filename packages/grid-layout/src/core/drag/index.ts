@@ -1,166 +1,86 @@
 import type { GridLayoutPlan } from "../../types";
+import { aesthetic } from "@stim-io/aesthetic";
 import { getContainerForElement, getTrackStepSize } from "../../lib/geometry";
-import { showPreview, hidePreview, projectPlan } from "../../lib/projection";
+import { gridData } from "../../lib/grid-data";
+import { findVisiblePlacement } from "../../lib/placement";
+import { pointerCapture } from "../../lib/pointer";
+import { projectPlan } from "../../lib/projection";
 import { clonePlan, getNumericTrackCount } from "../../lib/plan";
-import { GridNamespaceContext, type ActiveDrag } from "../context";
+import { unreachable } from "../../lib/unreachable";
+import {
+  GridNamespaceContext,
+  type ActiveDrag,
+  type InternalDragTriggerRegistration,
+  type InternalPanelRegistration,
+} from "../context";
+import { namespacePreview } from "../preview";
 import { createDragPlan } from "./strategy";
+
+interface DragStart {
+  target: HTMLElement;
+  trigger: InternalDragTriggerRegistration;
+  panel: InternalPanelRegistration;
+  plan: GridLayoutPlan;
+}
 
 export class GridDragController {
   constructor(private readonly context: GridNamespaceContext) {}
 
   readonly begin = (event: PointerEvent) => {
-    if (
-      !(event.currentTarget instanceof HTMLElement) ||
-      !this.context.currentPlan ||
-      this.context.activeDrag ||
-      this.context.activeResize
-    ) {
-      return;
-    }
+    return aesthetic.$with(this.getDragStart(event), (start) => {
+      event.preventDefault();
+      start.target.setPointerCapture(event.pointerId);
+      const drag = this.createActiveDrag(event, start);
 
-    const triggerId =
-      event.currentTarget.dataset.stimGridDragTrigger ??
-      event.currentTarget.dataset.stimGridDragHandle;
-    const trigger = triggerId ? this.context.dragTriggers.get(triggerId) : null;
-    const panel = trigger ? this.context.panels.get(trigger.panelId) : null;
-    const startPlacement = trigger
-      ? this.context.currentPlan.panels.find(
-          (placement) => placement.id === trigger.panelId,
-        )
-      : null;
-
-    if (
-      !trigger ||
-      !panel ||
-      !startPlacement ||
-      startPlacement.visible === false
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    this.context.activeDrag = {
-      pointerId: event.pointerId,
-      trigger,
-      panel,
-      startX: event.clientX,
-      startY: event.clientY,
-      startPlan: clonePlan(this.context.currentPlan),
-      candidatePlan: null,
-      snapshot: {
-        transform: panel.element.style.transform,
-        zIndex: panel.element.style.zIndex,
-        willChange: panel.element.style.willChange,
-      },
-    };
-    this.context.setInteractionCandidatePlan(null);
-    this.context.activateDragSnapshotLayer(trigger.panelId);
-    this.context.activeDrag.panel.element.dataset.stimGridDragSnapshot = "true";
-    this.context.activeDrag.panel.element.style.zIndex = "2";
-    this.context.activeDrag.panel.element.style.willChange = "transform";
-    event.currentTarget.dataset.stimGridDragging = "true";
+      this.context.activeDrag = drag;
+      this.context.clearInteractionCandidatePlan();
+      this.context.activateDragSnapshotLayer(start.trigger.panelId);
+      gridData.set(drag.panel.element, "dragSnapshot", "true");
+      drag.panel.element.style.zIndex = "2";
+      drag.panel.element.style.willChange = "transform";
+      gridData.set(start.target, "dragging", "true");
+    });
   };
 
   readonly request = (event: PointerEvent) => {
-    if (
-      !this.context.activeDrag ||
-      event.pointerId !== this.context.activeDrag.pointerId
-    ) {
-      return;
-    }
+    return aesthetic.$with(this.getActiveDrag(event), (drag) => {
+      const container = getContainerForElement(
+        this.context.containers.values(),
+        drag.panel.element,
+      );
 
-    const container = getContainerForElement(
-      this.context.containers.values(),
-      this.context.activeDrag.panel.element,
-    );
+      if (!container) {
+        return;
+      }
 
-    if (!container) {
-      return;
-    }
+      this.projectDragSnapshot(drag, event);
 
-    this.projectDragSnapshot(this.context.activeDrag, event);
+      const nextPlan = this.planFromPointer(drag, container.element, event);
 
-    const nextPlan = this.planFromPointer(
-      this.context.activeDrag,
-      container.element,
-      event,
-    );
+      if (!nextPlan) {
+        this.rejectDragPlan(drag);
+        return;
+      }
 
-    if (!nextPlan) {
-      this.context.activeDrag.candidatePlan = null;
-      this.context.setInteractionCandidatePlan(null);
-      this.restoreTransientFullPlanProjection(this.context.activeDrag);
-      hidePreview(this.context.previews.values());
-      return;
-    }
-
-    this.context.activeDrag.candidatePlan = nextPlan;
-    this.context.setInteractionCandidatePlan(nextPlan);
-    this.projectTransientFullPlan(this.context.activeDrag, nextPlan);
-    showPreview({
-      plan: nextPlan,
-      panelId: this.context.activeDrag.trigger.panelId,
-      interaction: "drag",
-      previews: this.context.previews.values(),
+      this.acceptDragPlan(drag, nextPlan);
     });
   };
 
   readonly commit = (event: PointerEvent) => {
-    if (
-      !this.context.activeDrag ||
-      event.pointerId !== this.context.activeDrag.pointerId
-    ) {
-      return;
-    }
-
-    const drag = this.context.activeDrag;
-
-    if (drag.trigger.element.hasPointerCapture(event.pointerId)) {
-      drag.trigger.element.releasePointerCapture(event.pointerId);
-    }
-
-    if (drag.candidatePlan) {
-      this.context.emit("layoutrequest", {
-        namespace: this.context.id,
-        interaction: "drag",
-        dragTriggerId: drag.trigger.id,
-        dragHandleId: drag.trigger.id,
-        panelId: drag.trigger.panelId,
-        plan: clonePlan(drag.candidatePlan),
-      });
-    }
-
-    delete drag.trigger.element.dataset.stimGridDragging;
-    this.restoreDragSnapshot(drag);
-    this.context.setInteractionCandidatePlan(null);
-    hidePreview(this.context.previews.values());
-    this.context.activeDrag = null;
-    this.restoreAcceptedPlanAfterCommit(drag);
+    return aesthetic.$with(this.getActiveDrag(event), (drag) => {
+      pointerCapture.release(drag.trigger.element, event.pointerId);
+      this.emitDragLayoutRequest(drag);
+      this.clearActiveDrag(drag);
+      this.restoreAcceptedPlanAfterCommit(drag);
+    });
   };
 
   readonly cancel = (event: PointerEvent) => {
-    if (
-      !this.context.activeDrag ||
-      event.pointerId !== this.context.activeDrag.pointerId
-    ) {
-      return;
-    }
-
-    if (
-      this.context.activeDrag.trigger.element.hasPointerCapture(event.pointerId)
-    ) {
-      this.context.activeDrag.trigger.element.releasePointerCapture(
-        event.pointerId,
-      );
-    }
-
-    delete this.context.activeDrag.trigger.element.dataset.stimGridDragging;
-    this.restoreTransientFullPlanProjection(this.context.activeDrag);
-    this.restoreDragSnapshot(this.context.activeDrag);
-    this.context.setInteractionCandidatePlan(null);
-    hidePreview(this.context.previews.values());
-    this.context.activeDrag = null;
+    return aesthetic.$with(this.getActiveDrag(event), (drag) => {
+      pointerCapture.release(drag.trigger.element, event.pointerId);
+      this.restoreTransientFullPlanProjection(drag);
+      this.clearActiveDrag(drag);
+    });
   };
 
   restoreTransientFullPlanProjection(drag: ActiveDrag) {
@@ -173,6 +93,106 @@ export class GridDragController {
 
   restoreDragSnapshotProjection(drag: ActiveDrag) {
     this.restoreDragSnapshot(drag);
+  }
+
+  private getDragStart(event: PointerEvent): DragStart | null {
+    if (
+      !(event.currentTarget instanceof HTMLElement) ||
+      !this.context.currentPlan ||
+      this.context.activeDrag ||
+      this.context.activeResize
+    ) {
+      return null;
+    }
+
+    const triggerId =
+      gridData.get(event.currentTarget, "dragTrigger") ??
+      gridData.get(event.currentTarget, "dragHandle");
+    const trigger =
+      triggerId === undefined
+        ? null
+        : (this.context.dragTriggers.get(triggerId) ?? null);
+    const panel = trigger ? this.context.panels.get(trigger.panelId) : null;
+    const startPlacement = trigger
+      ? findVisiblePlacement(this.context.currentPlan, trigger.panelId)
+      : null;
+
+    if (!trigger || !panel || !startPlacement) {
+      return null;
+    }
+
+    return {
+      target: event.currentTarget,
+      trigger,
+      panel,
+      plan: this.context.currentPlan,
+    };
+  }
+
+  private createActiveDrag(event: PointerEvent, start: DragStart): ActiveDrag {
+    return {
+      pointerId: event.pointerId,
+      trigger: start.trigger,
+      panel: start.panel,
+      startX: event.clientX,
+      startY: event.clientY,
+      startPlan: clonePlan(start.plan),
+      candidatePlan: null,
+      snapshot: {
+        transform: start.panel.element.style.transform,
+        zIndex: start.panel.element.style.zIndex,
+        willChange: start.panel.element.style.willChange,
+      },
+    };
+  }
+
+  private getActiveDrag(event: PointerEvent) {
+    const drag = this.context.activeDrag;
+
+    if (!drag || event.pointerId !== drag.pointerId) {
+      return null;
+    }
+
+    return drag;
+  }
+
+  private acceptDragPlan(drag: ActiveDrag, plan: GridLayoutPlan) {
+    drag.candidatePlan = plan;
+    this.context.setInteractionCandidatePlan(plan);
+    this.projectTransientFullPlan(drag, plan);
+    namespacePreview.show(this.context, {
+      plan,
+      panelId: drag.trigger.panelId,
+      interaction: "drag",
+    });
+  }
+
+  private rejectDragPlan(drag: ActiveDrag) {
+    drag.candidatePlan = null;
+    this.context.clearInteractionCandidatePlan();
+    this.restoreTransientFullPlanProjection(drag);
+    namespacePreview.hide(this.context);
+  }
+
+  private emitDragLayoutRequest(drag: ActiveDrag) {
+    return aesthetic.$with(drag.candidatePlan, (candidatePlan) => {
+      this.context.emit("layoutrequest", {
+        namespace: this.context.id,
+        interaction: "drag",
+        dragTriggerId: drag.trigger.id,
+        dragHandleId: drag.trigger.id,
+        panelId: drag.trigger.panelId,
+        plan: clonePlan(candidatePlan),
+      });
+    });
+  }
+
+  private clearActiveDrag(drag: ActiveDrag) {
+    gridData.clear(drag.trigger.element, "dragging");
+    this.restoreDragSnapshot(drag);
+    this.context.clearInteractionCandidatePlan();
+    namespacePreview.hide(this.context);
+    this.context.activeDrag = null;
   }
 
   private planFromPointer(
@@ -226,11 +246,9 @@ export class GridDragController {
     }
 
     queueMicrotask(() => {
-      if (!this.context.currentPlan) {
-        return;
-      }
-
-      this.projectPlan(this.context.currentPlan);
+      aesthetic.$with(this.context.currentPlan, (currentPlan) => {
+        this.projectPlan(currentPlan);
+      });
     });
   }
 
@@ -254,7 +272,7 @@ export class GridDragController {
     drag.panel.element.style.transform = drag.snapshot.transform;
     drag.panel.element.style.zIndex = drag.snapshot.zIndex;
     drag.panel.element.style.willChange = drag.snapshot.willChange;
-    delete drag.panel.element.dataset.stimGridDragSnapshot;
+    gridData.clear(drag.panel.element, "dragSnapshot");
     this.context.clearDragSnapshotLayer(drag.trigger.panelId);
   }
 
@@ -263,13 +281,16 @@ export class GridDragController {
       plan,
       containers: this.context.containers.values(),
       panels: this.context.panels.values(),
-      skipPanelIds: skipPanelId ? new Set([skipPanelId]) : undefined,
+      skipPanelIds:
+        skipPanelId === undefined ? undefined : new Set([skipPanelId]),
     });
   }
 }
 
 function usesTransientFullPlanProjection(drag: ActiveDrag) {
-  switch (drag.trigger.drag.strategy) {
+  const strategy = drag.trigger.drag.strategy;
+
+  switch (strategy) {
     case "push":
     case "reflow":
       return true;
@@ -277,8 +298,6 @@ function usesTransientFullPlanProjection(drag: ActiveDrag) {
     case "guarded":
       return false;
     default:
-      throw new Error(
-        `Unsupported drag strategy: ${String(drag.trigger.drag.strategy)}`,
-      );
+      return unreachable(strategy, "Unsupported drag strategy");
   }
 }

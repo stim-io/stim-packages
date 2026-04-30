@@ -12,6 +12,7 @@ Detailed component/package design belongs in `docs/`, not here.
 ## Core Constraints
 
 - `stim-packages/` owns atomic Vue components, shared layout primitives, tokens, theme definitions, and adjacent support packages for the `stim` product surface.
+- `packages/aesthetic` is the explicit incubation boundary for subjective/non-mainstream code-feel helpers; graduate helpers into shared or domain packages only after real repeated pressure proves the pattern durable.
 - Keep product-specific screen composition and business styling decisions out of this repo; those belong in `stim/`.
 - Keep `packages/shared` below component ownership: it may provide browser/runtime primitives and package lifecycle tooling helpers, but it must not depend on `@stim-io/components`.
 - Keep `packages/grid-layout` as framework-light namespace-scoped grid geometry and interaction infrastructure; product modes own layout state/selection, and full dashboard compaction, persistence, and business panel semantics stay out of this package.
@@ -31,6 +32,8 @@ Detailed component/package design belongs in `docs/`, not here.
 
 - Check stim-packages orchestration formatting: `pnpm run format`
 - Write stim-packages orchestration formatting: `pnpm run format:write`
+- Check aesthetic package formatting: `pnpm -C packages/aesthetic run format`
+- Typecheck aesthetic package: `pnpm -C packages/aesthetic run typecheck`
 - Check grid-layout package formatting: `pnpm -C packages/grid-layout run format`
 - Write grid-layout package formatting: `pnpm -C packages/grid-layout run format:write`
 - Build published package: `pnpm -C packages/components build`
@@ -42,7 +45,7 @@ Detailed component/package design belongs in `docs/`, not here.
 - Run WebKit playground: `pnpm -C playgrounds/webkit dev`
 - Run e2e tests: `pnpm -C e2e test`
 - Install Playwright browser: `pnpm -C e2e install:browsers`
-- Dry-run pack published package: `pnpm -C packages/components run pack`
+- Check published package payload: `pnpm -C packages/components run payload`
 - Dry-run release package boundary: `pnpm -C packages/components run release`
 - Run repo guard gate locally: `pnpm run guard`
 
@@ -52,9 +55,10 @@ Detailed component/package design belongs in `docs/`, not here.
 - `docs/operations/documentation.md`: docs update guide and anti-duplication rules
 - `docs/operations/publishing.md`: canonical GitHub Packages publish/install rule for the package workspace
 - `docs/architecture/components.md`: canonical shared component and primitive ownership method
+- `packages/aesthetic/`: `@stim-io/aesthetic` syntax-sugar incubation package for subjective code-feel helpers
 - `packages/grid-layout/`: framework-light `@stim-io/grid-layout` DOM engine for namespace-scoped flat grid layout, drag, resize, preview, and layout proposal events
 - `packages/playground/`: private support package for browser-engine playground composition
-- `packages/*/scripts/pack.mjs`: package-local pack command boundary
+- `packages/*/scripts/payload.mjs`: package-local published payload verification boundary
 - `packages/*/scripts/release.mjs`: package-local release command boundary
 - `.github/workflows/guard.yml`: required PR-protection guard gate
 - `.github/workflows/release-beta.yml`: tag-driven beta package release workflow

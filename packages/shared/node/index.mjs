@@ -1,4 +1,11 @@
-import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  copyFile,
+  mkdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execa } from "execa";
@@ -50,6 +57,40 @@ export async function assertPublicPackage(packageRoot, action) {
   return packageJson;
 }
 
+export async function verifyPackagePayload(packageRoot) {
+  const packageJson = await assertPublicPackage(packageRoot, "payload-checked");
+  const failures = [];
+  const paths = collectPayloadPaths(packageJson);
+
+  if (!packageJson.name?.startsWith("@stim-io/")) {
+    failures.push("package name must use the @stim-io scope");
+  }
+
+  if (packageJson.publishConfig?.registry !== "https://npm.pkg.github.com") {
+    failures.push("publishConfig.registry must be https://npm.pkg.github.com");
+  }
+
+  if (!Array.isArray(packageJson.files) || packageJson.files.length === 0) {
+    failures.push("package.json files must declare the published payload root");
+  }
+
+  for (const packagePath of paths) {
+    await assertPayloadPath(packageRoot, packagePath, failures);
+  }
+
+  if (failures.length > 0) {
+    throw new Error(
+      `payload check failed for ${packageJson.name ?? packageRoot}:\n${failures
+        .map((failure) => `- ${failure}`)
+        .join("\n")}`,
+    );
+  }
+
+  console.log(
+    `payload verified: ${packageJson.name} (${paths.length} package paths)`,
+  );
+}
+
 export async function emptyDirectory(directory) {
   await rm(directory, { recursive: true, force: true });
   await mkdir(directory, { recursive: true });
@@ -88,4 +129,94 @@ export async function writeTextFileEnsured(filePath, content) {
 
 function extensionPatterns(extensions) {
   return extensions.map((extension) => `**/*${extension}`);
+}
+
+function collectPayloadPaths(packageJson) {
+  return uniquePackagePaths([
+    ...collectFiles(packageJson.files),
+    ...collectFieldPaths(packageJson, ["main", "module", "types", "typings"]),
+    ...collectExportPaths(packageJson.exports),
+  ]);
+}
+
+function collectFiles(files) {
+  if (!Array.isArray(files)) {
+    return [];
+  }
+
+  return files.filter(
+    (file) => typeof file === "string" && !file.startsWith("!"),
+  );
+}
+
+function collectFieldPaths(packageJson, fieldNames) {
+  return fieldNames.flatMap((fieldName) => {
+    const value = packageJson[fieldName];
+    return typeof value === "string" ? [value] : [];
+  });
+}
+
+function collectExportPaths(exportsValue) {
+  const paths = [];
+  collectExportPath(exportsValue, paths);
+  return paths;
+}
+
+function collectExportPath(value, paths) {
+  if (typeof value === "string") {
+    paths.push(value);
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectExportPath(item, paths);
+    }
+    return;
+  }
+
+  if (value && typeof value === "object") {
+    for (const item of Object.values(value)) {
+      collectExportPath(item, paths);
+    }
+  }
+}
+
+function uniquePackagePaths(values) {
+  return [
+    ...new Set(values.map(toCheckablePackagePath).filter(Boolean)),
+  ].sort();
+}
+
+function toCheckablePackagePath(value) {
+  const packagePath = value.replace(/^\.\//, "");
+  const wildcardIndex = packagePath.indexOf("*");
+
+  if (wildcardIndex === -1) {
+    return packagePath;
+  }
+
+  const prefix = packagePath.slice(0, wildcardIndex).replace(/\/$/, "");
+  return prefix || ".";
+}
+
+async function assertPayloadPath(packageRoot, packagePath, failures) {
+  const absolutePath = path.resolve(packageRoot, packagePath);
+  const relativePath = path.relative(packageRoot, absolutePath);
+
+  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+    failures.push(`${packagePath} escapes the package root`);
+    return;
+  }
+
+  try {
+    await stat(absolutePath);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      failures.push(`${packagePath} does not exist`);
+      return;
+    }
+
+    throw error;
+  }
 }

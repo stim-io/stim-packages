@@ -1,5 +1,5 @@
 {
-  "name": "@stim-io/shared",
+  "name": "@stim-io/aesthetic",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -7,40 +7,33 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/stim-io/stim-packages.git",
-    "directory": "packages/shared"
+    "directory": "packages/aesthetic"
   },
   "homepage": "https://github.com/stim-io/stim-packages",
   "bugs": {
     "url": "https://github.com/stim-io/stim-packages/issues"
   },
   "files": [
-    "node",
-    "src",
-    "README.md"
+    "src"
   ],
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts"
-    },
-    "./node": {
-      "types": "./node/index.d.ts",
-      "import": "./node/index.mjs"
     }
   },
   "scripts": {
+    "format": "prettier --check package.json \"scripts/**/*.mjs\" \"src/**/*.ts\" tsconfig.json",
+    "format:write": "prettier --write package.json \"scripts/**/*.mjs\" \"src/**/*.ts\" tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "payload": "node ./scripts/payload.mjs",
     "release": "node ./scripts/release.mjs"
   },
-  "dependencies": {
-    "execa": "9.6.0",
-    "fast-glob": "3.3.3"
-  },
   "devDependencies": {
+    "@stim-io/shared": "workspace:*",
     "cac": "7.0.0",
-    "typescript": "6.0.2",
-    "vue": "3.5.32"
+    "prettier": "3.8.2",
+    "typescript": "6.0.2"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
