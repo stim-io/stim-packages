@@ -25,12 +25,14 @@ Detailed component/package design belongs in `docs/`, not here.
 - `main` should advance through PRs rather than direct pushes.
 - Keep force-push protection and branch-deletion protection enabled for `main`.
 - Keep squash merge as the default history strategy.
-- Keep required green checks in front of merge once `.github/workflows/verify.yml` is active.
+- Keep required green checks in front of merge once `.github/workflows/guard.yml` is active.
 
 ## Common Commands
 
-- Format workspace: `pnpm exec prettier --write .`
-- Check formatting: `pnpm exec prettier --check .`
+- Check stim-packages orchestration formatting: `pnpm run format`
+- Write stim-packages orchestration formatting: `pnpm run format:write`
+- Check grid-layout package formatting: `pnpm -C packages/grid-layout run format`
+- Write grid-layout package formatting: `pnpm -C packages/grid-layout run format:write`
 - Build published package: `pnpm -C packages/components build`
 - Typecheck published package: `pnpm -C packages/components typecheck`
 - Typecheck shared support package: `pnpm -C packages/shared typecheck`
@@ -42,7 +44,7 @@ Detailed component/package design belongs in `docs/`, not here.
 - Install Playwright browser: `pnpm -C e2e install:browsers`
 - Dry-run pack published package: `pnpm -C packages/components run pack`
 - Dry-run release package boundary: `pnpm -C packages/components run release`
-- Run repo verify gate locally: `pnpm verify:ci`
+- Run repo guard gate locally: `pnpm run guard`
 
 ## Key File Index
 
@@ -54,7 +56,7 @@ Detailed component/package design belongs in `docs/`, not here.
 - `packages/playground/`: private support package for browser-engine playground composition
 - `packages/*/scripts/pack.mjs`: package-local pack command boundary
 - `packages/*/scripts/release.mjs`: package-local release command boundary
-- `.github/workflows/verify.yml`: required PR-protection verify gate
+- `.github/workflows/guard.yml`: required PR-protection guard gate
 - `.github/workflows/release-beta.yml`: tag-driven beta package release workflow
 - `../../AGENTS.md`: repo-root workspace boundary across all attached repos
 

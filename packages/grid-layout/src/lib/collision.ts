@@ -76,16 +76,19 @@ export function rangesOverlapOnCrossAxis(
   b: GridPanelPlacement,
   axis: "columns" | "rows",
 ) {
-  if (axis === "columns") {
-    return rangesOverlap(a.rowStart, a.rowSpan, b.rowStart, b.rowSpan);
+  switch (axis) {
+    case "columns":
+      return rangesOverlap(a.rowStart, a.rowSpan, b.rowStart, b.rowSpan);
+    case "rows":
+      return rangesOverlap(
+        a.columnStart,
+        a.columnSpan,
+        b.columnStart,
+        b.columnSpan,
+      );
+    default:
+      throw new Error(`Unsupported grid axis: ${String(axis)}`);
   }
-
-  return rangesOverlap(
-    a.columnStart,
-    a.columnSpan,
-    b.columnStart,
-    b.columnSpan,
-  );
 }
 
 export function placementOverlaps(

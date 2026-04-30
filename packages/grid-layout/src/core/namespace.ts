@@ -3,6 +3,8 @@ import type {
   GridContainerRegistrationOptions,
   GridDragHandleRegistration,
   GridDragHandleRegistrationOptions,
+  GridDragTriggerRegistration,
+  GridDragTriggerRegistrationOptions,
   GridHandleRegistration,
   GridHandleRegistrationOptions,
   GridLayoutPlan,
@@ -27,7 +29,8 @@ import { restoreElement, snapshotElement } from "../lib/snapshot";
 import {
   GridNamespaceContext,
   type InternalContainerRegistration,
-  type InternalDragHandleRegistration,
+  type InternalDragTriggerEventKind,
+  type InternalDragTriggerRegistration,
   type InternalHandleRegistration,
   type InternalPanelRegistration,
   type InternalPreviewRegistration,
@@ -45,6 +48,7 @@ export class GridNamespace {
   readonly id: GridNamespaceId;
 
   private readonly context: GridNamespaceContext;
+  private readonly layers: GridNamespaceContext["layers"];
   private readonly resize: GridResizeController;
   private readonly drag: GridDragController;
 
@@ -55,6 +59,7 @@ export class GridNamespace {
   private constructor(id: GridNamespaceId) {
     this.id = id;
     this.context = new GridNamespaceContext(id);
+    this.layers = this.context.layers;
     this.resize = new GridResizeController(this.context);
     this.drag = new GridDragController(this.context);
   }
@@ -68,10 +73,14 @@ export class GridNamespace {
       this.registerPanel(element, options),
     handle: (element: HTMLElement, options: GridHandleRegistrationOptions) =>
       this.registerHandle(element, options),
+    dragTrigger: (
+      element: HTMLElement,
+      options: GridDragTriggerRegistrationOptions,
+    ) => this.registerDragTrigger(element, options, "dragTrigger"),
     dragHandle: (
       element: HTMLElement,
       options: GridDragHandleRegistrationOptions,
-    ) => this.registerDragHandle(element, options),
+    ) => this.registerDragTrigger(element, options, "dragHandle"),
     preview: (
       element: HTMLElement,
       options: GridPreviewRegistrationOptions = {},
@@ -81,7 +90,9 @@ export class GridNamespace {
   readonly layout = {
     apply: (plan: GridLayoutPlan) => this.applyLayout(plan),
     get: () =>
-      this.context.currentPlan ? clonePlan(this.context.currentPlan) : null,
+      this.layers.fact.plan.current
+        ? clonePlan(this.layers.fact.plan.current)
+        : null,
   };
 
   readonly elements = {
@@ -90,9 +101,13 @@ export class GridNamespace {
     ],
     panels: (): GridPanelRegistration[] => [...this.context.panels.values()],
     handles: (): GridHandleRegistration[] => [...this.context.handles.values()],
-    dragHandles: (): GridDragHandleRegistration[] => [
-      ...this.context.dragHandles.values(),
+    dragTriggers: (): GridDragTriggerRegistration[] => [
+      ...this.context.dragTriggers.values(),
     ],
+    dragHandles: (): GridDragHandleRegistration[] =>
+      [...this.context.dragTriggers.values()].filter(
+        (registration) => registration.eventKind === "dragHandle",
+      ),
     previews: (): GridPreviewRegistration[] => [
       ...this.context.previews.values(),
     ],
@@ -112,8 +127,8 @@ export class GridNamespace {
       preview.unregister();
     }
 
-    for (const dragHandle of [...this.context.dragHandles.values()]) {
-      dragHandle.unregister();
+    for (const dragTrigger of [...this.context.dragTriggers.values()]) {
+      dragTrigger.unregister();
     }
 
     for (const handle of [...this.context.handles.values()]) {
@@ -129,7 +144,7 @@ export class GridNamespace {
     }
 
     this.context.listeners.clear();
-    this.context.currentPlan = null;
+    this.layers.fact.plan.current = null;
     this.context.clearInteraction();
   }
 
@@ -184,7 +199,7 @@ export class GridNamespace {
 
     if (options.plan) {
       this.layout.apply(options.plan);
-    } else if (this.context.currentPlan) {
+    } else if (this.layers.fact.plan.current) {
       this.projectCurrentPlan();
     }
 
@@ -213,6 +228,22 @@ export class GridNamespace {
 
         active = false;
         this.context.panels.delete(options.id);
+        if (this.context.activeDrag?.panel === registration) {
+          if (
+            this.context.activeDrag.trigger.element.hasPointerCapture(
+              this.context.activeDrag.pointerId,
+            )
+          ) {
+            this.context.activeDrag.trigger.element.releasePointerCapture(
+              this.context.activeDrag.pointerId,
+            );
+          }
+          this.drag.restoreTransientFullPlanProjection(this.context.activeDrag);
+          this.drag.restoreDragSnapshotProjection(this.context.activeDrag);
+          this.context.setInteractionCandidatePlan(null);
+          hidePreview(this.context.previews.values());
+          this.context.activeDrag = null;
+        }
         registration.restore();
         this.context.emit("unregister", {
           namespace: this.id,
@@ -235,7 +266,7 @@ export class GridNamespace {
       element,
     });
 
-    if (this.context.currentPlan) {
+    if (this.layers.fact.plan.current) {
       this.projectCurrentPlan();
     }
 
@@ -316,11 +347,12 @@ export class GridNamespace {
     return registration;
   }
 
-  private registerDragHandle(
+  private registerDragTrigger(
     element: HTMLElement,
-    options: GridDragHandleRegistrationOptions,
-  ): GridDragHandleRegistration {
-    const existing = this.context.dragHandles.get(options.id);
+    options: GridDragTriggerRegistrationOptions,
+    eventKind: InternalDragTriggerEventKind,
+  ): GridDragTriggerRegistration {
+    const existing = this.context.dragTriggers.get(options.id);
 
     if (existing) {
       existing.unregister();
@@ -328,35 +360,39 @@ export class GridNamespace {
 
     const previous = snapshotElement(element);
     let active = true;
-    const registration: InternalDragHandleRegistration = {
+    const registration: InternalDragTriggerRegistration = {
       id: options.id,
       element,
       panelId: options.panelId,
       drag: {
         strategy: options.drag?.strategy ?? defaultDragStrategy,
       },
+      eventKind,
       unregister: () => {
         if (
           !active ||
-          this.context.dragHandles.get(options.id) !== registration
+          this.context.dragTriggers.get(options.id) !== registration
         ) {
           return;
         }
 
         active = false;
-        this.context.dragHandles.delete(options.id);
-        if (this.context.activeDrag?.handle === registration) {
+        this.context.dragTriggers.delete(options.id);
+        if (this.context.activeDrag?.trigger === registration) {
           if (element.hasPointerCapture(this.context.activeDrag.pointerId)) {
             element.releasePointerCapture(this.context.activeDrag.pointerId);
           }
+          this.drag.restoreTransientFullPlanProjection(this.context.activeDrag);
+          this.drag.restoreDragSnapshotProjection(this.context.activeDrag);
+          this.context.setInteractionCandidatePlan(null);
           hidePreview(this.context.previews.values());
           this.context.activeDrag = null;
         }
-        this.removeDragHandleListeners(element);
+        this.removeDragTriggerListeners(element);
         registration.restore();
         this.context.emit("unregister", {
           namespace: this.id,
-          kind: "dragHandle",
+          kind: registration.eventKind,
           id: options.id,
         });
       },
@@ -365,8 +401,9 @@ export class GridNamespace {
       },
     };
 
-    this.context.dragHandles.set(options.id, registration);
+    this.context.dragTriggers.set(options.id, registration);
     element.dataset.stimGridNamespace = this.id;
+    element.dataset.stimGridDragTrigger = options.id;
     element.dataset.stimGridDragHandle = options.id;
     element.dataset.stimGridDragPanel = options.panelId;
     element.dataset.stimGridDragStrategy = registration.drag.strategy;
@@ -377,7 +414,7 @@ export class GridNamespace {
     element.addEventListener("pointercancel", this.drag.cancel);
     this.context.emit("register", {
       namespace: this.id,
-      kind: "dragHandle",
+      kind: registration.eventKind,
       id: options.id,
       element,
     });
@@ -435,21 +472,21 @@ export class GridNamespace {
   }
 
   private applyLayout(plan: GridLayoutPlan) {
-    this.context.currentPlan = normalizePlan(plan);
+    this.layers.fact.plan.current = normalizePlan(plan);
     this.projectCurrentPlan();
     this.context.emit("layoutchange", {
       namespace: this.id,
-      plan: clonePlan(this.context.currentPlan),
+      plan: clonePlan(this.layers.fact.plan.current),
     });
   }
 
   private projectCurrentPlan() {
-    if (!this.context.currentPlan) {
+    if (!this.layers.fact.plan.current) {
       return;
     }
 
     projectPlan({
-      plan: this.context.currentPlan,
+      plan: this.layers.fact.plan.current,
       containers: this.context.containers.values(),
       panels: this.context.panels.values(),
     });
@@ -462,7 +499,7 @@ export class GridNamespace {
     element.removeEventListener("pointercancel", this.resize.cancel);
   }
 
-  private removeDragHandleListeners(element: HTMLElement) {
+  private removeDragTriggerListeners(element: HTMLElement) {
     element.removeEventListener("pointerdown", this.drag.begin);
     element.removeEventListener("pointermove", this.drag.request);
     element.removeEventListener("pointerup", this.drag.commit);

@@ -35,7 +35,12 @@
       #reject-guarded-resize,
       #context-drag,
       #reject-drag,
-      #reject-guarded-drag {
+      #reject-guarded-drag,
+      #push-vertical-drag,
+      #push-blocked-drag,
+      #push-skip-drag,
+      #reflow-drag,
+      #reflow-fixed-drag {
         position: absolute;
         border: 0;
         background: rgb(28 94 184);
@@ -57,7 +62,12 @@
 
       #context-drag,
       #reject-drag,
-      #reject-guarded-drag {
+      #reject-guarded-drag,
+      #push-vertical-drag,
+      #push-blocked-drag,
+      #push-skip-drag,
+      #reflow-drag,
+      #reflow-fixed-drag {
         inset-block-start: 0;
         inset-inline-start: 0;
         width: 24px;
@@ -146,6 +156,127 @@
           reject-adjacent
         </section>
       </div>
+
+      <div id="grid-push" class="fixture-grid" data-fixture="namespace-push">
+        <div id="preview-push" aria-hidden="true"></div>
+        <section
+          id="push-vertical-active"
+          data-stim-grid-panel="push-vertical-active"
+        >
+          push-vertical-active
+          <button
+            id="push-vertical-drag"
+            type="button"
+            aria-label="Move vertical push panel"
+          ></button>
+        </section>
+        <section
+          id="push-vertical-blocker"
+          data-stim-grid-panel="push-vertical-blocker"
+        >
+          push-vertical-blocker
+        </section>
+        <section
+          id="push-blocked-active"
+          data-stim-grid-panel="push-blocked-active"
+        >
+          push-blocked-active
+          <button
+            id="push-blocked-drag"
+            type="button"
+            aria-label="Move blocked push panel"
+          ></button>
+        </section>
+        <section
+          id="push-blocked-blocker"
+          data-stim-grid-panel="push-blocked-blocker"
+        >
+          push-blocked-blocker
+        </section>
+      </div>
+
+      <div
+        id="grid-push-skip"
+        class="fixture-grid"
+        data-fixture="namespace-push-skip"
+      >
+        <section id="push-skip-active" data-stim-grid-panel="push-skip-active">
+          push-skip-active
+          <button
+            id="push-skip-drag"
+            type="button"
+            aria-label="Move push skip panel"
+          ></button>
+        </section>
+        <section
+          id="push-skip-blocker"
+          data-stim-grid-panel="push-skip-blocker"
+        >
+          push-skip-blocker
+        </section>
+      </div>
+
+      <div
+        id="grid-reflow"
+        class="fixture-grid"
+        data-fixture="namespace-reflow"
+      >
+        <section id="reflow-active" data-stim-grid-panel="reflow-active">
+          reflow-active
+          <button
+            id="reflow-drag"
+            type="button"
+            aria-label="Move reflow panel"
+          ></button>
+        </section>
+        <section id="reflow-blocker" data-stim-grid-panel="reflow-blocker">
+          reflow-blocker
+        </section>
+        <section id="reflow-lower" data-stim-grid-panel="reflow-lower">
+          reflow-lower
+        </section>
+      </div>
+
+      <div
+        id="grid-reflow-fixed"
+        class="fixture-grid"
+        data-fixture="namespace-reflow-fixed"
+      >
+        <section
+          id="reflow-fixed-active"
+          data-stim-grid-panel="reflow-fixed-active"
+        >
+          reflow-fixed-active
+          <button
+            id="reflow-fixed-drag"
+            type="button"
+            aria-label="Move fixed-row reflow panel"
+          ></button>
+        </section>
+        <section
+          id="reflow-fixed-blocker"
+          data-stim-grid-panel="reflow-fixed-blocker"
+        >
+          reflow-fixed-blocker
+        </section>
+      </div>
+
+      <div
+        id="grid-trigger"
+        class="fixture-grid"
+        data-fixture="namespace-trigger"
+      >
+        <div id="preview-trigger" aria-hidden="true"></div>
+        <section id="trigger-panel" data-stim-grid-panel="trigger-panel">
+          trigger-panel
+        </section>
+        <section id="trigger-neighbor" data-stim-grid-panel="trigger-neighbor">
+          trigger-neighbor
+        </section>
+      </div>
+      <button id="external-drag-trigger" type="button">
+        external drag trigger
+      </button>
     </main>
 
     <script type="module">
@@ -250,16 +381,155 @@
           },
         ],
       };
+      const pushPlan = {
+        mode: "push",
+        columns: 6,
+        rows: 6,
+        panels: [
+          {
+            id: "push-vertical-active",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 1,
+            rowSpan: 2,
+          },
+          {
+            id: "push-vertical-blocker",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 3,
+            rowSpan: 2,
+          },
+          {
+            id: "push-blocked-active",
+            columnStart: 3,
+            columnSpan: 2,
+            rowStart: 5,
+            rowSpan: 2,
+          },
+          {
+            id: "push-blocked-blocker",
+            columnStart: 5,
+            columnSpan: 2,
+            rowStart: 5,
+            rowSpan: 2,
+          },
+        ],
+      };
+      const pushSkipPlan = {
+        mode: "push-skip",
+        columns: 4,
+        rows: 1,
+        panels: [
+          {
+            id: "push-skip-active",
+            columnStart: 1,
+            columnSpan: 1,
+            rowStart: 1,
+            rowSpan: 1,
+          },
+          {
+            id: "push-skip-blocker",
+            columnStart: 3,
+            columnSpan: 1,
+            rowStart: 1,
+            rowSpan: 1,
+          },
+        ],
+      };
+      const reflowPlan = {
+        mode: "reflow",
+        columns: 4,
+        rows: 5,
+        panels: [
+          {
+            id: "reflow-active",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 1,
+            rowSpan: 2,
+          },
+          {
+            id: "reflow-blocker",
+            columnStart: 3,
+            columnSpan: 2,
+            rowStart: 1,
+            rowSpan: 2,
+          },
+          {
+            id: "reflow-lower",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 4,
+            rowSpan: 2,
+          },
+        ],
+      };
+      const reflowFixedPlan = {
+        mode: "reflow-fixed",
+        columns: 2,
+        rows: ["minmax(0, 1fr)", "minmax(0, 1fr)"],
+        panels: [
+          {
+            id: "reflow-fixed-active",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 1,
+            rowSpan: 1,
+          },
+          {
+            id: "reflow-fixed-blocker",
+            columnStart: 1,
+            columnSpan: 2,
+            rowStart: 2,
+            rowSpan: 1,
+          },
+        ],
+      };
+      const triggerPlan = {
+        mode: "trigger",
+        columns: 4,
+        rows: 2,
+        panels: [
+          {
+            id: "trigger-panel",
+            columnStart: 1,
+            columnSpan: 1,
+            rowStart: 1,
+            rowSpan: 2,
+          },
+          {
+            id: "trigger-neighbor",
+            columnStart: 3,
+            columnSpan: 1,
+            rowStart: 1,
+            rowSpan: 2,
+          },
+        ],
+      };
 
       const nsA = GridNamespace.create("fixture-a");
       const nsB = GridNamespace.create("fixture-b");
       const nsReject = GridNamespace.create("fixture-reject");
+      const nsPush = GridNamespace.create("fixture-push");
+      const nsPushSkip = GridNamespace.create("fixture-push-skip");
+      const nsReflow = GridNamespace.create("fixture-reflow");
+      const nsReflowFixed = GridNamespace.create("fixture-reflow-fixed");
+      const nsTrigger = GridNamespace.create("fixture-trigger");
       const events = [];
       const layoutRequests = [];
       const dragRequests = [];
       const rejectedLayoutRequests = [];
       const rejectedResizePlans = [];
       const rejectedDragPlans = [];
+      const pushLayoutRequests = [];
+      const pushDragPlans = [];
+      const pushSkipDragPlans = [];
+      const reflowDragPlans = [];
+      const reflowFixedDragPlans = [];
+      const triggerDragRequests = [];
+      const triggerDragPlans = [];
+      let acceptPushRequests = false;
       nsA.events.on("layoutchange", (event) => events.push(event));
       nsA.events.on("layoutrequest", (event) => {
         layoutRequests.push(event);
@@ -284,6 +554,9 @@
       nsA.register.dragHandle(document.querySelector("#context-drag"), {
         id: "context-drag",
         panelId: "context",
+        drag: {
+          strategy: "free",
+        },
       });
       nsB.register.container(document.querySelector("#grid-b"), {
         plan: isolatedPlan,
@@ -331,6 +604,9 @@
       nsReject.register.dragHandle(document.querySelector("#reject-drag"), {
         id: "reject-drag",
         panelId: "reject-content",
+        drag: {
+          strategy: "push",
+        },
       });
       nsReject.register.dragHandle(
         document.querySelector("#reject-guarded-drag"),
@@ -342,6 +618,159 @@
           },
         },
       );
+      nsPush.events.on("layoutrequest", (event) => {
+        pushLayoutRequests.push(event);
+        if (event.interaction === "drag") {
+          pushDragPlans.push(event.plan);
+        }
+        if (acceptPushRequests) {
+          nsPush.layout.apply(event.plan);
+        }
+      });
+      nsPush.register.container(document.querySelector("#grid-push"), {
+        plan: pushPlan,
+      });
+      nsPush.register.preview(document.querySelector("#preview-push"));
+      nsPush.register.panel(document.querySelector("#push-vertical-active"), {
+        id: "push-vertical-active",
+      });
+      nsPush.register.panel(document.querySelector("#push-vertical-blocker"), {
+        id: "push-vertical-blocker",
+      });
+      nsPush.register.panel(document.querySelector("#push-blocked-active"), {
+        id: "push-blocked-active",
+      });
+      nsPush.register.panel(document.querySelector("#push-blocked-blocker"), {
+        id: "push-blocked-blocker",
+      });
+      nsPush.register.dragHandle(
+        document.querySelector("#push-vertical-drag"),
+        {
+          id: "push-vertical-drag",
+          panelId: "push-vertical-active",
+          drag: {
+            strategy: "push",
+          },
+        },
+      );
+      nsPush.register.dragHandle(document.querySelector("#push-blocked-drag"), {
+        id: "push-blocked-drag",
+        panelId: "push-blocked-active",
+        drag: {
+          strategy: "push",
+        },
+      });
+      nsPushSkip.events.on("layoutrequest", (event) => {
+        if (event.interaction === "drag") {
+          pushSkipDragPlans.push(event.plan);
+        }
+      });
+      nsPushSkip.register.container(document.querySelector("#grid-push-skip"), {
+        plan: pushSkipPlan,
+      });
+      nsPushSkip.register.panel(document.querySelector("#push-skip-active"), {
+        id: "push-skip-active",
+      });
+      nsPushSkip.register.panel(document.querySelector("#push-skip-blocker"), {
+        id: "push-skip-blocker",
+      });
+      nsPushSkip.register.dragHandle(
+        document.querySelector("#push-skip-drag"),
+        {
+          id: "push-skip-drag",
+          panelId: "push-skip-active",
+          drag: {
+            strategy: "push",
+          },
+        },
+      );
+      nsReflow.events.on("layoutrequest", (event) => {
+        if (event.interaction === "drag") {
+          reflowDragPlans.push(event.plan);
+        }
+      });
+      nsReflow.register.container(document.querySelector("#grid-reflow"), {
+        plan: reflowPlan,
+      });
+      const reflowActiveRegistration = nsReflow.register.panel(
+        document.querySelector("#reflow-active"),
+        {
+          id: "reflow-active",
+        },
+      );
+      nsReflow.register.panel(document.querySelector("#reflow-blocker"), {
+        id: "reflow-blocker",
+      });
+      nsReflow.register.panel(document.querySelector("#reflow-lower"), {
+        id: "reflow-lower",
+      });
+      nsReflow.register.dragHandle(document.querySelector("#reflow-drag"), {
+        id: "reflow-drag",
+        panelId: "reflow-active",
+        drag: {
+          strategy: "reflow",
+        },
+      });
+      nsReflowFixed.events.on("layoutrequest", (event) => {
+        if (event.interaction === "drag") {
+          reflowFixedDragPlans.push(event.plan);
+        }
+      });
+      nsReflowFixed.register.container(
+        document.querySelector("#grid-reflow-fixed"),
+        {
+          plan: reflowFixedPlan,
+        },
+      );
+      nsReflowFixed.register.panel(
+        document.querySelector("#reflow-fixed-active"),
+        {
+          id: "reflow-fixed-active",
+        },
+      );
+      nsReflowFixed.register.panel(
+        document.querySelector("#reflow-fixed-blocker"),
+        {
+          id: "reflow-fixed-blocker",
+        },
+      );
+      nsReflowFixed.register.dragHandle(
+        document.querySelector("#reflow-fixed-drag"),
+        {
+          id: "reflow-fixed-drag",
+          panelId: "reflow-fixed-active",
+          drag: {
+            strategy: "reflow",
+          },
+        },
+      );
+      nsTrigger.events.on("layoutrequest", (event) => {
+        if (event.interaction === "drag") {
+          triggerDragRequests.push(event);
+          triggerDragPlans.push(event.plan);
+          nsTrigger.layout.apply(event.plan);
+        }
+      });
+      nsTrigger.register.container(document.querySelector("#grid-trigger"), {
+        plan: triggerPlan,
+      });
+      nsTrigger.register.preview(document.querySelector("#preview-trigger"));
+      nsTrigger.register.panel(document.querySelector("#trigger-panel"), {
+        id: "trigger-panel",
+      });
+      nsTrigger.register.panel(document.querySelector("#trigger-neighbor"), {
+        id: "trigger-neighbor",
+      });
+      const externalDragTriggerRegistration = nsTrigger.register.dragTrigger(
+        document.querySelector("#external-drag-trigger"),
+        {
+          id: "external-drag-trigger",
+          panelId: "trigger-panel",
+          drag: {
+            strategy: "free",
+          },
+        },
+      );
 
       window.__gridLayoutFixture = {
         events,
@@ -350,6 +779,23 @@
         rejectedLayoutRequests,
         rejectedResizePlans,
         rejectedDragPlans,
+        pushLayoutRequests,
+        pushDragPlans,
+        pushSkipDragPlans,
+        reflowDragPlans,
+        reflowFixedDragPlans,
+        triggerDragRequests,
+        triggerDragPlans,
+        unregisterReflowActive: () => reflowActiveRegistration.unregister(),
+        unregisterExternalDragTrigger: () =>
+          externalDragTriggerRegistration.unregister(),
+        getExternalDragTriggerCount: () =>
+          nsTrigger.elements.dragTriggers().length,
+        getExternalDragHandleCount: () =>
+          nsTrigger.elements.dragHandles().length,
+        setAcceptPushRequests: (accept) => {
+          acceptPushRequests = accept;
+        },
         applyFocus: () => nsA.layout.apply(focusPlan),
         exerciseStaleRegistration: () => {
           const ns = GridNamespace.create("stale-registration");
@@ -367,6 +813,38 @@
           return trackedSecond;
         },
         getPlanMode: (name) => (name === "a" ? nsA : nsB).layout.get()?.mode,
+        getDefaultDragStrategy: () => {
+          const ns = GridNamespace.create("default-drag-strategy");
+          const element = document.createElement("button");
+          const registration = ns.register.dragHandle(element, {
+            id: "default-drag-strategy",
+            panelId: "unmounted-panel",
+          });
+          const strategy = element.dataset.stimGridDragStrategy;
+
+          registration.unregister();
+          ns.destroy();
+
+          return strategy;
+        },
+        getDragHandleLifecycleKinds: () => {
+          const ns = GridNamespace.create("drag-handle-lifecycle");
+          const element = document.createElement("button");
+          const kinds = [];
+
+          ns.events.on("register", (event) => kinds.push(event.kind));
+          ns.events.on("unregister", (event) => kinds.push(event.kind));
+
+          const registration = ns.register.dragHandle(element, {
+            id: "legacy-drag-handle",
+            panelId: "unmounted-panel",
+          });
+
+          registration.unregister();
+          ns.destroy();
+
+          return kinds;
+        },
         getPanelSpan: (id) => {
           const placement = nsA.layout
             .get()
@@ -424,6 +902,32 @@
             rowEnd: style.gridRowEnd,
           };
         },
+        getPanelSnapshot: (selector) => {
+          const element = document.querySelector(selector);
+          const style = getComputedStyle(element);
+          const matrix =
+            style.transform === "none"
+              ? null
+              : new DOMMatrixReadOnly(style.transform);
+
+          return {
+            active: element.dataset.stimGridDragSnapshot,
+            transform: style.transform,
+            x: matrix?.m41 ?? 0,
+            y: matrix?.m42 ?? 0,
+          };
+        },
+        getDragTriggerDataset: (selector) => {
+          const element = document.querySelector(selector);
+
+          return {
+            trigger: element.dataset.stimGridDragTrigger,
+            handle: element.dataset.stimGridDragHandle,
+            panel: element.dataset.stimGridDragPanel,
+            strategy: element.dataset.stimGridDragStrategy,
+            dragging: element.dataset.stimGridDragging,
+          };
+        },
         getPreviewPlacement: () => {
           const element = document.querySelector("#preview-a");
           const style = getComputedStyle(element);
@@ -440,6 +944,20 @@
         },
         getRejectedPreviewPlacement: () => {
           const element = document.querySelector("#preview-reject");
+          const style = getComputedStyle(element);
+
+          return {
+            hidden: element.hidden,
+            panel: element.dataset.stimGridPreviewPanel,
+            interaction: element.dataset.stimGridPreviewInteraction,
+            columnStart: style.gridColumnStart,
+            columnEnd: style.gridColumnEnd,
+            rowStart: style.gridRowStart,
+            rowEnd: style.gridRowEnd,
+          };
+        },
+        getPushPreviewPlacement: () => {
+          const element = document.querySelector("#preview-push");
           const style = getComputedStyle(element);
 
           return {

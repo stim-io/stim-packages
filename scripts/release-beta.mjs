@@ -255,7 +255,7 @@ function releaseConfig() {
     components: {
       packageDir: "packages/components",
       verifyCommands: [
-        ["pnpm", "verify:ci"],
+        ["pnpm", "run", "guard"],
         ["pnpm", "-C", "packages/components", "build"],
         ["pnpm", "-C", "packages/components", "typecheck"],
         ["pnpm", "-C", "packages/shared", "typecheck"],
@@ -278,7 +278,7 @@ function releaseConfig() {
     shared: {
       packageDir: "packages/shared",
       verifyCommands: [
-        ["pnpm", "verify:ci"],
+        ["pnpm", "run", "guard"],
         ["pnpm", "-C", "packages/components", "build"],
         ["pnpm", "-C", "packages/shared", "typecheck"],
         ["pnpm", "-C", "packages/shared", "run", "pack"],

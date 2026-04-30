@@ -39,12 +39,12 @@ const props = withDefaults(
 );
 
 const root = ref<HTMLElement | null>(null);
-const dragHandleRoot = ref<HTMLElement | null>(null);
+const dragTriggerRoot = ref<HTMLElement | null>(null);
 const handleRoot = ref<HTMLElement | null>(null);
 const context = inject(stimGridContextKey);
 let panelRegistration: GridPanelRegistration | null = null;
 let handleRegistration: GridHandleRegistration | null = null;
-let dragHandleRegistration: GridDragHandleRegistration | null = null;
+let dragTriggerRegistration: GridDragHandleRegistration | null = null;
 
 if (!context) {
   throw new Error("StimGridPanel must be rendered inside StimGridContainer");
@@ -74,8 +74,8 @@ watch(
 );
 
 onBeforeUnmount(() => {
-  dragHandleRegistration?.unregister();
-  dragHandleRegistration = null;
+  dragTriggerRegistration?.unregister();
+  dragTriggerRegistration = null;
   handleRegistration?.unregister();
   handleRegistration = null;
   panelRegistration?.unregister();
@@ -83,31 +83,43 @@ onBeforeUnmount(() => {
 });
 
 const resizeEdge = computed<GridResizeEdge | null>(() => {
-  if (props.resize === true) {
-    return "inline-end";
+  switch (props.resize) {
+    case true:
+      return "inline-end";
+    case false:
+      return null;
+    case "inline-end":
+    case "block-end":
+      return props.resize;
+    default:
+      throw new Error(
+        `Unsupported grid resize option: ${String(props.resize)}`,
+      );
   }
-
-  if (props.resize === false) {
-    return null;
-  }
-
-  return props.resize;
 });
 
 const resizeHandleId = computed(() =>
   resizeEdge.value ? `${props.id}-${resizeEdge.value}` : null,
 );
 
-const dragHandleId = computed(() => (props.drag ? `${props.id}-drag` : null));
+const dragTriggerId = computed(() => (props.drag ? `${props.id}-drag` : null));
 
 const resizeHandleClassName = computed(() => [
   "stim-grid-resize-handle",
   resizeEdge.value ? `stim-grid-resize-handle--edge-${resizeEdge.value}` : null,
 ]);
 
-const resizeHandleOrientation = computed(() =>
-  resizeEdge.value === "block-end" ? "horizontal" : "vertical",
-);
+const resizeHandleOrientation = computed(() => {
+  switch (resizeEdge.value) {
+    case "block-end":
+      return "horizontal";
+    case "inline-end":
+    case null:
+      return "vertical";
+    default:
+      throw new Error(`Unsupported resize edge: ${String(resizeEdge.value)}`);
+  }
+});
 
 function registerPanel() {
   if (!root.value || !context?.ns.value) {
@@ -118,22 +130,22 @@ function registerPanel() {
   panelRegistration = context.ns.value.register.panel(root.value, {
     id: props.id,
   });
-  registerDragHandle();
+  registerDragTrigger();
   registerHandle();
 }
 
-function registerDragHandle() {
-  dragHandleRegistration?.unregister();
-  dragHandleRegistration = null;
+function registerDragTrigger() {
+  dragTriggerRegistration?.unregister();
+  dragTriggerRegistration = null;
 
-  if (!dragHandleRoot.value || !context?.ns.value || !dragHandleId.value) {
+  if (!dragTriggerRoot.value || !context?.ns.value || !dragTriggerId.value) {
     return;
   }
 
-  dragHandleRegistration = context.ns.value.register.dragHandle(
-    dragHandleRoot.value,
+  dragTriggerRegistration = context.ns.value.register.dragHandle(
+    dragTriggerRoot.value,
     {
-      id: dragHandleId.value,
+      id: dragTriggerId.value,
       panelId: props.id,
       drag: props.dragOptions,
     },
@@ -164,7 +176,7 @@ function registerHandle() {
     <slot />
     <button
       v-if="drag"
-      ref="dragHandleRoot"
+      ref="dragTriggerRoot"
       class="stim-grid-drag-handle"
       type="button"
       :aria-label="dragAriaLabel"

@@ -8,6 +8,8 @@ export type {
   GridDragLayoutRequestEvent,
   GridDragOptions,
   GridDragStrategy,
+  GridDragTriggerRegistration,
+  GridDragTriggerRegistrationOptions,
   GridHandleRegistration,
   GridHandleRegistrationOptions,
   GridLayoutPlan,

@@ -38,18 +38,45 @@ test("chromium playground assembles a single-namespace flat grid demo", async ()
   );
   const dragHandleBox = await dragHandle.boundingBox();
 
+  await expect
+    .poll(() =>
+      page.locator('[data-grid-layout-metric="drag-strategy"]').textContent(),
+    )
+    .toBe("reflow");
+  await expect
+    .poll(() =>
+      dragHandle.evaluate((element) =>
+        element.getAttribute("data-stim-grid-drag-strategy"),
+      ),
+    )
+    .toBe("reflow");
+
   if (!dragHandleBox) {
     throw new Error("expected sessions drag handle to be visible");
   }
 
+  await page.locator('[data-grid-drag-strategy-option="free"]').click();
+
+  await expect
+    .poll(() =>
+      page.locator('[data-grid-layout-metric="drag-strategy"]').textContent(),
+    )
+    .toBe("free");
+
+  const freeDragHandleBox = await dragHandle.boundingBox();
+
+  if (!freeDragHandleBox) {
+    throw new Error("expected sessions free drag handle to be visible");
+  }
+
   await page.mouse.move(
-    dragHandleBox.x + dragHandleBox.width / 2,
-    dragHandleBox.y + dragHandleBox.height / 2,
+    freeDragHandleBox.x + freeDragHandleBox.width / 2,
+    freeDragHandleBox.y + freeDragHandleBox.height / 2,
   );
   await page.mouse.down();
   await page.mouse.move(
-    dragHandleBox.x + dragHandleBox.width / 2 + 120,
-    dragHandleBox.y + dragHandleBox.height / 2,
+    freeDragHandleBox.x + freeDragHandleBox.width / 2 + 120,
+    freeDragHandleBox.y + freeDragHandleBox.height / 2,
     { steps: 6 },
   );
   await page.mouse.up();

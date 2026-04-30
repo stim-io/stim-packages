@@ -14,8 +14,10 @@ export function snapshotElement(element: HTMLElement) {
     preview: element.dataset.stimGridPreview,
     previewPanel: element.dataset.stimGridPreviewPanel,
     previewInteraction: element.dataset.stimGridPreviewInteraction,
+    dragTrigger: element.dataset.stimGridDragTrigger,
     dragHandle: element.dataset.stimGridDragHandle,
     dragPanel: element.dataset.stimGridDragPanel,
+    dragStrategy: element.dataset.stimGridDragStrategy,
     dragging: element.dataset.stimGridDragging,
     resizePanel: element.dataset.stimGridResizePanel,
     resizeEdge: element.dataset.stimGridResizeEdge,
@@ -47,8 +49,10 @@ export function restoreElement(
     "stimGridPreviewInteraction",
     snapshot.previewInteraction,
   );
+  restoreDatasetValue(element, "stimGridDragTrigger", snapshot.dragTrigger);
   restoreDatasetValue(element, "stimGridDragHandle", snapshot.dragHandle);
   restoreDatasetValue(element, "stimGridDragPanel", snapshot.dragPanel);
+  restoreDatasetValue(element, "stimGridDragStrategy", snapshot.dragStrategy);
   restoreDatasetValue(element, "stimGridDragging", snapshot.dragging);
   restoreDatasetValue(element, "stimGridResizePanel", snapshot.resizePanel);
   restoreDatasetValue(element, "stimGridResizeEdge", snapshot.resizeEdge);

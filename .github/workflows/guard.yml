@@ -1,4 +1,4 @@
-name: verify
+name: guard
 
 on:
   pull_request:
@@ -6,8 +6,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  verify:
+  guard:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,5 +25,5 @@ jobs:
         with:
           node-version: 20
 
-      - name: Verify package.json dependency specifiers
-        run: pnpm verify:ci
+      - name: Guard package boundary dependency specifiers
+        run: pnpm run guard
